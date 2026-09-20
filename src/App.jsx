@@ -485,7 +485,13 @@ function GlobalStyle() {
   return (
     <style>{`
       @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
-      html { scroll-behavior: smooth; }
+      html, body { scroll-behavior: smooth; background: #0A0E17; margin: 0; padding: 0; min-height: 100%; }
+      body { overflow-x: hidden; }
+      html { scrollbar-color: #2A3448 #0A0E17; scrollbar-width: thin; }
+      ::-webkit-scrollbar { width: 10px; height: 10px; }
+      ::-webkit-scrollbar-track { background: #0A0E17; }
+      ::-webkit-scrollbar-thumb { background: #2A3448; border-radius: 6px; }
+      ::-webkit-scrollbar-thumb:hover { background: #3A4458; }
       .nodal-scope * { box-sizing: border-box; }
       .nodal-scope select { appearance: none; -webkit-appearance: none; }
       .nodal-scope input::placeholder { color: #4B5468; }
