@@ -2,6 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Old hosting address -> own domain (keeps the same path). Only fires on the exact old host,
+      // so the real domain and preview deployments are unaffected.
+      if (location.hostname === "nodal-gamma-seven.vercel.app") location.replace("https://www.nodaldex.fyi" + location.pathname + location.search + location.hash);
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Nodal — routing layer for BlockDAG DeFi</title>
