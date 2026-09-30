@@ -123,6 +123,11 @@ Common `MS_SIG` / `MS_ARGS` values:
   `0xbd6fbA41Ab84292163A599510a12d6Bf8B7CCc76` (Reef's router), and the explorer can read that value directly via the
   adapter's public `reef()` function.
 
+## Reporting a vulnerability
+
+Please report security issues privately to **security@nodaldex.fyi**, not in public issues, so they can be fixed
+(or the router paused) first.
+
 ## Disclaimer
 
 Experimental software on an early-stage chain. The source is published and has been checked with Slither, but it has not had an independent third-party audit. Contract ownership is held by a 2-of-2 hardware-wallet multisig.
