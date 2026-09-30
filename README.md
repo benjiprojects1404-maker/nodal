@@ -27,6 +27,7 @@ Build on the community / canonical side of chain 1404 only. `rpc.bdagscan.com` /
 | `SEPOLIA-VALIDATION-GUIDE.md` | Validating the router against a real Uniswap V2 deployment on Sepolia |
 | `testing/nodal-remix-frontend.html` | Standalone wallet-connected page for driving a deployed router during testing (open it in a browser; paste in the contract address) |
 | `src/`, `index.html`, `public/` | The marketing/app website (React + Vite), deployed to Vercel |
+| `adapters/reef/` | `NodalReefAdapter.sol` lets Nodal route through Reef (Reef renames the V2 BDAG swap functions), plus its tests and `REEF-ACTIVATION-GUIDE.md` |
 | `docs/diagrams/` | Routing-architecture and fee-breakdown diagrams (SVG + PNG) |
 
 ## Compiler settings (important)
