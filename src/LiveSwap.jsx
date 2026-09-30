@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { BrowserProvider, Contract, Interface, JsonRpcProvider, ZeroAddress, decodeBytes32String, formatUnits, getAddress, parseUnits } from "ethers";
+import { getReadRpcs } from "./rpcRegistry.js";
 import { ArrowDownUp, AlertTriangle, Loader2, Wallet, Check, ExternalLink } from "lucide-react";
 
 /* ---------------------------------------------------------------------------
@@ -20,19 +21,7 @@ import { ArrowDownUp, AlertTriangle, Loader2, Wallet, Check, ExternalLink } from
 const env = (typeof import.meta !== "undefined" && import.meta.env) || {};
 const CFG = {
   chainId: Number(env.VITE_CHAIN_ID || 1404),
-  rpcs: env.VITE_RPC_URL
-    ? [env.VITE_RPC_URL]
-    : [
-        "https://rpc.blockdag.engineering/",
-        "https://rpc.welshdag.trade/",
-        "https://rpc.bdagexplorer.com/",
-        "https://rpc.cms-mining-pool.net/",
-        "https://rpc.dvdmining.com/",
-        "https://rpc.capedag.com/",
-        "https://rpc.east.bdag-us.org/",
-        "https://rpc.west.bdag-us.org/",
-        "https://rms-bdag-rpc.de/api/rpc-live",
-      ],
+  rpc: env.VITE_RPC_URL || null, // local testing override; otherwise the live list (rpcRegistry.js)
   router: env.VITE_NODAL_ROUTER || "0xA06f8a856896aA1836f04F758C1E5Ac5dbe24672",
   // Token discovery and path finding use Reef's factory, since Reef is the live source.
   // When a second DEX is registered, extend discovery to its factory too.
@@ -78,7 +67,8 @@ const PAIR_ABI = ["function token0() view returns (address)", "function token1()
 let _ro = null;
 async function readProvider() {
   if (_ro) return _ro;
-  for (const url of CFG.rpcs) {
+  const urls = CFG.rpc ? [CFG.rpc] : await getReadRpcs();
+  for (const url of urls) {
     const p = new JsonRpcProvider(url, CFG.chainId, { staticNetwork: true });
     try {
       await Promise.race([p.getBlockNumber(), new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 6000))]);

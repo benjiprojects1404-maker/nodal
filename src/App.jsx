@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useContext, createContext } from "react";
+import { FALLBACK_RPCS, loadRpcRegistry } from "./rpcRegistry.js";
 import LiveSwap from "./LiveSwap.jsx";
 import {
   ArrowDownUp,
@@ -22,20 +23,9 @@ import {
 
 const BLOCKDAG_CHAIN_ID_DEC = 1404;
 const BLOCKDAG_CHAIN_ID_HEX = "0x57c";
-const BLOCKDAG_RPCS = [
-  "https://rpc.blockdag.engineering/",
-  "https://rpc.welshdag.trade/",
-  "https://rpc.bdagexplorer.com/",
-  "https://rpc.cms-mining-pool.net/",
-  "https://rpc.dvdmining.com/",
-  "https://rpc.capedag.com/",
-  "https://rpc.east.bdag-us.org/",
-  "https://rpc.west.bdag-us.org/",
-  "https://rms-bdag-rpc.de/api/rpc-live",
-];
-// The RPC endpoints Nodal currently connects through (the community-run node set).
-// Endpoints are added as further operators prove reliable; the RPC status panel
-// below checks them live from the visitor's own browser.
+// Wallet "add network" prompt uses the built-in list; reads and the RPC status panel use the
+// live list from /api/rpcs (see src/rpcRegistry.js), which follows bdag.community's node board.
+const BLOCKDAG_RPCS = FALLBACK_RPCS;
 const BLOCKDAG_EXPLORER = "https://explorer.blockdag.engineering/";
 
 const WalletContext = createContext(null);
@@ -916,31 +906,49 @@ function withTimeout(promise, ms) {
 }
 
 function RpcStatusPanel() {
-  const [rows, setRows] = useState(BLOCKDAG_RPCS.map((url) => ({ url, state: "idle", latency: null })));
+  const [rows, setRows] = useState([]);
+  const [meta, setMeta] = useState(null); // { live, checkedAt, excluded }
   const [summary, setSummary] = useState(null); // { kind: "ok" | "warn" | "unknown", text }
   const [checking, setChecking] = useState(false);
 
-  const checkAll = async () => {
+  const checkAll = async (refresh = false) => {
     setChecking(true);
     setSummary(null);
-    setRows(BLOCKDAG_RPCS.map((url) => ({ url, state: "checking", latency: null })));
 
+    // 1. Which endpoints exist: the live list from bdag.community's node board, or our built-in list.
+    const reg = await loadRpcRegistry({ refresh });
+    const entries = reg
+      ? reg.rpcs.map((r) => ({ url: r.url, feed: r.status, usable: r.usable, blurb: r.blurb }))
+      : FALLBACK_RPCS.map((url) => ({ url, feed: null, usable: true, blurb: "" }));
+    setMeta({ live: !!reg, checkedAt: reg?.checkedAt || null, excluded: reg?.excluded || [] });
+    setRows(entries.map((e) => ({ ...e, state: "checking", latency: null })));
+
+    // 2. Check each one live from this browser (that's the connection Nodal itself uses for reads).
     const results = await Promise.all(
-      BLOCKDAG_RPCS.map(async (url) => {
+      entries.map(async (e) => {
         const started = performance.now();
         try {
-          const blockHex = await withTimeout(rpcCall(url, "eth_blockNumber"), 6000);
+          const blockHex = await withTimeout(rpcCall(e.url, "eth_blockNumber"), 6000);
           const ms = Math.round(performance.now() - started);
-          return { url, ok: true, blockNumber: parseInt(blockHex, 16), ms };
+          return { ...e, ok: true, blockNumber: parseInt(blockHex, 16), ms };
         } catch {
-          return { url, ok: false };
+          return { ...e, ok: false };
         }
       })
     );
 
-    setRows(results.map((r) => ({ url: r.url, state: r.ok ? "up" : "down", latency: r.ok ? `${r.ms} ms` : "unreachable" })));
+    setRows(
+      results.map((r) => {
+        if (r.feed === "fork") return { ...r, state: "down", latency: "different chain — not used" };
+        if (r.feed === "mismatch") return { ...r, state: "down", latency: "block hashes don't match — not used" };
+        if (r.ok) return { ...r, state: "up", latency: r.feed === "behind" ? `${r.ms} ms · behind` : `${r.ms} ms` };
+        if (r.feed === "ok") return { ...r, state: "blocked", latency: "online, but not from browsers" };
+        if (r.feed === "behind") return { ...r, state: "down", latency: "behind the chain head" };
+        return { ...r, state: "down", latency: r.feed === "offline" ? "offline" : "unreachable" };
+      })
+    );
 
-    // Cross-check: do the responsive RPCs actually agree on chain history, not just "are they up".
+    // 3. Cross-check: do the responsive RPCs actually agree on chain history, not just "are they up".
     // Pick a block a few behind the slowest node's tip so a barely-propagated block on a faster
     // node doesn't look like a false disagreement.
     const up = results.filter((r) => r.ok);
@@ -950,7 +958,7 @@ function RpcStatusPanel() {
         try {
           const hashes = await Promise.all(
             up.map(async (r) => {
-              const block = await rpcCall(r.url, "eth_getBlockByNumber", ["0x" + refBlock.toString(16), false]);
+              const block = await withTimeout(rpcCall(r.url, "eth_getBlockByNumber", ["0x" + refBlock.toString(16), false]), 8000);
               return { url: r.url, hash: block ? block.hash : null };
             })
           );
@@ -981,15 +989,18 @@ function RpcStatusPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const dotColor = { idle: "#5A6478", checking: "#A64CF0", up: "#3FD9EA", down: "#FF8266" };
+  const dotColor = { idle: "#5A6478", checking: "#A64CF0", up: "#3FD9EA", blocked: "#8B93A7", down: "#FF8266" };
   const summaryColor = summary?.kind === "ok" ? "#3FD9EA" : summary?.kind === "warn" ? "#FF8266" : "#8B93A7";
+  const checkedLabel = meta?.checkedAt
+    ? new Date(meta.checkedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : null;
 
   return (
     <Section id="rpc-status">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 6 }}>
         <Eyebrow color="#A64CF0">Infrastructure</Eyebrow>
         <button
-          onClick={checkAll}
+          onClick={() => checkAll(true)}
           disabled={checking}
           style={{
             fontSize: 12,
@@ -1005,13 +1016,25 @@ function RpcStatusPanel() {
         </button>
       </div>
       <h2 style={{ margin: "0 0 10px", fontSize: 26, fontWeight: 700 }}>RPC status</h2>
-      <p style={{ margin: "0 0 18px", fontSize: 13, lineHeight: 1.6, color: "#8B93A7", maxWidth: "60ch" }}>
-        Checked live, from your own browser, against each endpoint below — not borrowed from a
-        third-party leaderboard. Nodal automatically falls back to the next entry if one fails.
-        This also cross-checks whether the responding RPCs agree on recent block hashes — chain
-        1404 has documented, actively-discussed disagreement between different node operators
-        about which chain history is canonical. This check can only tell you whether these
-        specific RPCs agree with each other, not which side (if any) is correct.
+      <p style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.6, color: "#8B93A7", maxWidth: "60ch" }}>
+        The list of public endpoints comes from the community's{" "}
+        <a href="https://bdag.community/chain#nodes" target="_blank" rel="noopener noreferrer" style={{ color: "#8B93A7", textDecoration: "underline" }}>node board</a>,
+        so nodes that shut down drop off and new ones appear without a site update. Each one is then
+        checked live from your own browser, which is the connection Nodal uses for quotes; it
+        automatically falls back to the next healthy entry if one fails. It also cross-checks
+        whether the responding RPCs agree on recent block hashes, because chain 1404 has had
+        operators serving different chain histories. That tells you whether these RPCs agree with
+        each other, not which side (if any) is correct.
+      </p>
+      <p style={{ margin: "0 0 18px", fontSize: 12, lineHeight: 1.6, color: "#6B7488" }}>
+        {meta == null
+          ? "Loading the endpoint list…"
+          : meta.live
+          ? `Endpoint list: live from bdag.community${checkedLabel ? ` (checked ${checkedLabel})` : ""}.`
+          : "Couldn't load the live endpoint list just now, so this shows Nodal's built-in list."}
+        {meta?.excluded?.length
+          ? ` Never used: ${meta.excluded.map((x) => `${x.name} (${x.reason})`).join(", ")}.`
+          : ""}
       </p>
 
       {summary && (
@@ -1022,6 +1045,7 @@ function RpcStatusPanel() {
         {rows.map((r) => (
           <div
             key={r.url}
+            title={r.blurb || undefined}
             style={{
               display: "flex",
               alignItems: "center",
@@ -1045,7 +1069,7 @@ function RpcStatusPanel() {
               }}
             />
             <span style={{ color: "#F4F6FB", flex: 1, wordBreak: "break-all" }}>{shortRpcLabel(r.url)}</span>
-            <span style={{ color: "#6B7488", fontSize: 11, whiteSpace: "nowrap" }}>{r.latency || (r.state === "checking" ? "checking…" : "—")}</span>
+            <span style={{ color: "#6B7488", fontSize: 11, textAlign: "right" }}>{r.latency || (r.state === "checking" ? "checking…" : "—")}</span>
           </div>
         ))}
       </div>
