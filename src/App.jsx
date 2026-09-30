@@ -687,7 +687,7 @@ function Hero() {
           The routing layer for <span style={{ color: "#3FD9EA" }}>BlockDAG</span> DeFi.
         </h1>
         <p style={{ margin: "0 auto 32px", fontSize: 17, lineHeight: 1.6, color: "#8B93A7", maxWidth: 600 }}>
-          Nodal compares every liquidity source on chain 1404 in real time, routes each trade to whichever one returns the most, and lets you bring in the top assets in crypto through a single bridge — non-custodial, transparent, built for this chain.
+          Nodal compares every liquidity source on chain 1404 in real time and routes each trade to whichever one returns the most. Once a bridge goes live, it will let you bring in the top assets in crypto too — non-custodial, transparent, built for this chain.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
           <a href="#app" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 15, background: "linear-gradient(90deg, #A64CF0, #FF8266)", color: "#0A0E17", padding: "13px 24px", borderRadius: 10, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
