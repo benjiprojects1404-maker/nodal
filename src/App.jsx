@@ -941,9 +941,9 @@ function RpcStatusPanel() {
       results.map((r) => {
         if (r.feed === "fork") return { ...r, state: "down", latency: "different chain — not used" };
         if (r.feed === "mismatch") return { ...r, state: "down", latency: "block hashes don't match — not used" };
-        if (r.ok) return { ...r, state: "up", latency: r.feed === "behind" ? `${r.ms} ms · behind` : `${r.ms} ms` };
+        if (r.feed === "behind") return { ...r, state: "down", latency: "behind the chain head — not used" };
+        if (r.ok) return { ...r, state: "up", latency: `${r.ms} ms` };
         if (r.feed === "ok") return { ...r, state: "blocked", latency: "online, but not from browsers" };
-        if (r.feed === "behind") return { ...r, state: "down", latency: "behind the chain head" };
         return { ...r, state: "down", latency: r.feed === "offline" ? "offline" : "unreachable" };
       })
     );
@@ -951,20 +951,25 @@ function RpcStatusPanel() {
     // 3. Cross-check: do the responsive RPCs actually agree on chain history, not just "are they up".
     // Pick a block a few behind the slowest node's tip so a barely-propagated block on a faster
     // node doesn't look like a false disagreement.
-    const up = results.filter((r) => r.ok);
+    // Leave out nodes the node board already flags (behind, fork, mismatched): they're known-bad
+    // and would only drag the reference block down.
+    const up = results.filter((r) => r.ok && (r.feed == null || r.feed === "ok"));
     if (up.length >= 2) {
       const refBlock = Math.min(...up.map((r) => r.blockNumber)) - 5;
       if (refBlock > 0) {
         try {
-          const hashes = await Promise.all(
+          const settled = await Promise.allSettled(
             up.map(async (r) => {
               const block = await withTimeout(rpcCall(r.url, "eth_getBlockByNumber", ["0x" + refBlock.toString(16), false]), 8000);
               return { url: r.url, hash: block ? block.hash : null };
             })
           );
+          // Compare the nodes that answered; a slow node shouldn't sink the whole check.
+          const hashes = settled.filter((x) => x.status === "fulfilled" && x.value.hash).map((x) => x.value);
+          if (hashes.length < 2) throw new Error("not enough answers");
           const uniqueHashes = new Set(hashes.map((h) => h.hash));
           if (uniqueHashes.size <= 1) {
-            setSummary({ kind: "ok", text: `✓ All ${up.length} responsive RPCs agree on block #${refBlock}'s hash.` });
+            setSummary({ kind: "ok", text: `✓ All ${hashes.length} responsive RPCs agree on block #${refBlock}'s hash.` });
           } else {
             const groups = {};
             hashes.forEach((h) => {

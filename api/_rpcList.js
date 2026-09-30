@@ -45,7 +45,10 @@ export function toRpcList(board) {
       typeof n.headDelta === "number" &&
       n.headDelta <= MAX_HEAD_DELTA;
 
-    if (status === "ok" && !usable) status = hashesOk ? "behind" : "mismatch";
+    if (status === "ok" && !usable) {
+      const behind = typeof n.headDelta !== "number" || n.headDelta > MAX_HEAD_DELTA;
+      status = behind ? "behind" : hashesOk ? "behind" : "mismatch";
+    }
 
     rpcs.push({
       name: label,
