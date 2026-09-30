@@ -565,7 +565,7 @@ function BetaBanner() {
           <ul style={{ margin: "10px 0 0", padding: "0 0 0 18px", fontSize: 13, lineHeight: 1.6, color: "#C9B3AD" }}>
             <li>One live liquidity source today (Reef, built by the same team as Nodal). Trades are capped at 100 BDAG each during the beta.</li>
             <li>Checked with Slither (open-source static analysis), but no paid third-party human audit yet.</li>
-            <li>Contract ownership is a single key today, not yet a multisig.</li>
+            <li>Admin controls (pause, fees, sources, caps) are held by a 2-of-2 hardware-wallet multisig, not a single key.</li>
             <li>The Bridge tab previews a lock-and-mint flow — no official BlockDAG bridge exists yet.</li>
           </ul>
         )}
