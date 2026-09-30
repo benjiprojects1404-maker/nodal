@@ -13,6 +13,7 @@ A DEX aggregator for BlockDAG (chain ID 1404). Nodal compares the liquidity sour
 | What | Address |
 |---|---|
 | NodalRouter | `0xA06f8a856896aA1836f04F758C1E5Ac5dbe24672` |
+| Owner: 2-of-2 multisig (Trezor + Ledger) | `0x4E2401bFD24c66166fABF9Cc5cD5B6B2c5c860fc` |
 | Treasury (fee recipient) | `0x8A8F4E1d70F889C5aA2579E8ff2826e4fE8B2127` |
 | NodalReefAdapter (registered as source `reef`) | `0x4b60D344eDA7E3D859739B5AbC1176d756E22d56` |
 
@@ -47,10 +48,69 @@ npm run build    # production build into dist/
 
 Pushes to `main` redeploy the site on Vercel.
 
-## Adding a liquidity source
+## Admin actions (via the multisig)
 
-When a new DEX has real liquidity, the contract owner registers its router address with one `registerSource(id, router, name)` transaction.
+Since 30 Sep 2026 (block 22931119) NodalRouter is owned by `0x4E2401bF…60fc`, a 2-of-2 multisig whose owners are
+`0x306208Aa25A5BBAB22Bd9208c4178b9f2Dd929FD` (Trezor) and `0x33D599DD7C9e1C11b6DC4a48AE209D0f066CF91A` (Ledger).
+It's the same `ReefAdminMultisig` contract that holds Reef's `feeToSetter`. Fees still go to the treasury wallet above.
+
+Every owner-only call takes three steps: **submit** (first signature), **confirm** (second signature), **execute** (anyone).
+
+### In Remix (works with both hardware wallets through MetaMask)
+
+1. Load NodalRouter at `0xA06f…4672`. Fill in the inputs of the function you want, e.g. `pause`, then click its
+   **Calldata** copy button. **Don't** click Transact; your wallet isn't the owner any more, so it would just fail.
+2. Load the multisig at `0x4E2401bFD24c66166fABF9Cc5cD5B6B2c5c860fc` using this interface:
+
+   ```solidity
+   // SPDX-License-Identifier: MIT
+   pragma solidity 0.8.24;
+   interface NodalMultisig {
+       function submitTransaction(address to, uint256 value, bytes calldata data) external returns (uint256);
+       function confirmTransaction(uint256 txId) external;
+       function executeTransaction(uint256 txId) external;
+       function transactionCount() external view returns (uint256);
+       function confirmationCount(uint256 txId) external view returns (uint256);
+       function transactions(uint256 txId) external view returns (address to, uint256 value, bytes memory data, bool executed);
+       function getOwners() external view returns (address[] memory);
+       function required() external view returns (uint256);
+   }
+   ```
+3. MetaMask on the **Trezor** account: `submitTransaction(0xA06f8a856896aA1836f04F758C1E5Ac5dbe24672, 0, <pasted calldata>)`.
+   The new `txId` is `transactionCount() - 1`.
+4. MetaMask on the **Ledger** account: `confirmTransaction(txId)`.
+5. Any account: `executeTransaction(txId)`, then check `transactions(txId)` shows `executed: true`.
+
+### With the reef-dex script (alternative)
+
+Run `scripts/propose-multisig-tx.js` from the `reef-dex` project, with `MS_TARGET` pointed at NodalRouter. Use the
+submit step from a network whose signer is one of the two owners (`blockdagLedger` for the Ledger).
+
+```bash
+MS_CMD=submit  MS_TARGET=0xA06f8a856896aA1836f04F758C1E5Ac5dbe24672 MS_SIG="pause()" \
+  npx hardhat run scripts/propose-multisig-tx.js --network blockdagLedger
+MS_CMD=confirm MS_TXID=<txId> npx hardhat run scripts/propose-multisig-tx.js --network <other owner>
+MS_CMD=execute MS_TXID=<txId> npx hardhat run scripts/propose-multisig-tx.js --network blockdag
+MS_CMD=status  MS_TXID=<txId> npx hardhat run scripts/propose-multisig-tx.js --network blockdag
+```
+
+The multisig does not revert if the inner call fails. It emits `ExecutionFailed` and leaves the proposal retryable,
+so always check `executed: true` afterwards.
+
+Common `MS_SIG` / `MS_ARGS` values:
+
+| Action | `MS_SIG` | `MS_ARGS` |
+|---|---|---|
+| Emergency stop | `pause()` | none |
+| Resume | `unpause()` | none |
+| Switch a source off/on | `setSourceActive(bytes32,bool)` | `0x7265656600000000000000000000000000000000000000000000000000000000,false` |
+| Add a new DEX | `registerSource(bytes32,address,string)` | `<id>,<router or adapter>,<Name>` |
+| Change a trade cap | `setMaxAmountIn(address,uint256)` | `<token, or 0x000…000 for BDAG>,<amount in wei>` |
+| Change the fee (max 100 = 1%) | `setFeeBps(uint16)` | `15` |
+| Change fee recipient | `setTreasury(address)` | `<address>` |
+
+**Never** submit `renounceOwnership()`. It would lock these controls forever.
 
 ## Disclaimer
 
-Experimental software on an early-stage chain. The source is published and has been checked with Slither, but it has not had an independent third-party audit. Contract ownership is currently a single key, not a multisig.
+Experimental software on an early-stage chain. The source is published and has been checked with Slither, but it has not had an independent third-party audit. Contract ownership is held by a 2-of-2 hardware-wallet multisig.
