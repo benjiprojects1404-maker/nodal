@@ -1,5 +1,9 @@
 # Connecting Nodal to Reef
 
+> **Status: LIVE since 30 Sep 2026.** Adapter deployed at `0x4b60D344eDA7E3D859739B5AbC1176d756E22d56` and registered with NodalRouter as source `reef`.
+> Beta caps set: 100 BDAG and 1,000,000 NOCAP per trade.
+> Live-tested both ways on mainnet: 0.1 BDAG → NOCAP (block 22923850) and 5,000 NOCAP → BDAG (block 22929432). Both paid out the quoted amount, with the 0.15% fee to the treasury.
+
 Reef is a Uniswap V2-style DEX on BlockDAG, but its router renames the two native-coin swaps:
 
 | NodalRouter calls | Reef's router has |
