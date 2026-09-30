@@ -17,7 +17,12 @@ A DEX aggregator for BlockDAG (chain ID 1404). Nodal compares the liquidity sour
 | Treasury (fee recipient) | `0x8A8F4E1d70F889C5aA2579E8ff2826e4fE8B2127` |
 | NodalReefAdapter (registered as source `reef`) | `0x4b60D344eDA7E3D859739B5AbC1176d756E22d56` |
 
-Nodal currently connects to chain 1404 through the community-run RPC endpoints listed in `src/App.jsx`, with automatic failover between them. The site's RPC status panel checks those endpoints live from each visitor's browser. More endpoints are added as further operators prove reliable.
+RPC endpoints are not hard-coded any more. `api/rpcs.js` (a Vercel function, served at
+https://nodaldex.fyi/api/rpcs) reads the community node board at https://bdag.community/chain#nodes and returns the
+endpoints it lists, marking which are healthy (on chain 1404, near the head, matching block hashes). Nodes the board
+flags as the fork or retired are never used. The site's quotes and RPC status panel use that list, so a node that
+shuts down drops off and a new one appears without a site update. If the list can't be loaded, the site falls back to
+the built-in list in `src/rpcRegistry.js`. Handshake and Reef use the same endpoint.
 
 ## What's in the repo
 
