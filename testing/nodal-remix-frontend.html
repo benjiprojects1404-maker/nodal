@@ -142,7 +142,7 @@
     independently audited — start with small amounts.</p>
     <button id="betaReadMoreBtn">Read more</button>
     <ul id="betaDetails" class="hidden">
-      <li>No liquidity sources are registered yet — each one is added by the owner once a real DEX is confirmed live on the canonical chain.</li>
+      <li>One liquidity source is registered today (Reef, via NodalReefAdapter); more are added by the owner as other DEXs launch real liquidity.</li>
       <li>Checked with Slither (open-source static analysis), but no paid third-party human audit yet.</li>
       <li>Admin controls (pause, fees, sources, caps) are held by a 2-of-2 hardware-wallet multisig, not a single key.</li>
       <li>This page talks to whatever contract address you paste in below — verify it's the one you deployed.</li>
@@ -244,8 +244,7 @@ const BLOCKDAG_RPCS = [
   "https://rpc.west.bdag-us.org/",
   "https://rms-bdag-rpc.de/api/rpc-live",
 ];
-// NOTE: rpc.bdagscan.com is deliberately excluded — confirmed as a diverged
-// fork of chain 1404. Kept identical to the list in src/App.jsx.
+// The RPC endpoints Nodal currently connects through. Kept identical to the list in src/App.jsx.
 
 // Read-only calls (quotes, contract loads) go through all nine endpoints via
 // ethers' FallbackProvider with quorum 1 — any single endpoint answering is

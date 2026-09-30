@@ -4,9 +4,9 @@ A DEX aggregator for BlockDAG (chain ID 1404). Nodal compares the liquidity sour
 
 **Status: beta.** The router is live on BlockDAG mainnet with **one liquidity source, Reef** (registered 30 Sep 2026 via `NodalReefAdapter`; Reef is built by the same team as Nodal). Trades are capped at 100 BDAG and 1,000,000 NOCAP each during the beta. The website's Swap tab trades live through NodalRouter; the Bridge tab is still a labelled preview.
 
-- Website: https://nodal-gamma-seven.vercel.app
+- Website: https://nodaldex.fyi
 - Chain: BlockDAG, chain ID `1404` (`0x57c`)
-- Explorer: https://explorer.blockdag.engineering/
+- Explorer: https://explorer.bdagexplorer.com (NodalRouter is verified there)
 
 ## Deployed contracts
 
@@ -17,7 +17,7 @@ A DEX aggregator for BlockDAG (chain ID 1404). Nodal compares the liquidity sour
 | Treasury (fee recipient) | `0x8A8F4E1d70F889C5aA2579E8ff2826e4fE8B2127` |
 | NodalReefAdapter (registered as source `reef`) | `0x4b60D344eDA7E3D859739B5AbC1176d756E22d56` |
 
-Build on the community / canonical side of chain 1404 only. `rpc.bdagscan.com` / `bdagscan.com` serve a diverged fork and are deliberately excluded everywhere in this repo. See https://bdagexplorer.com/leaderboard.html#rpc-ranking for live status.
+Nodal currently connects to chain 1404 through the community-run RPC endpoints listed in `src/App.jsx`, with automatic failover between them. The site's RPC status panel checks those endpoints live from each visitor's browser. More endpoints are added as further operators prove reliable.
 
 ## What's in the repo
 

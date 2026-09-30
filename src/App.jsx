@@ -33,9 +33,9 @@ const BLOCKDAG_RPCS = [
   "https://rpc.west.bdag-us.org/",
   "https://rms-bdag-rpc.de/api/rpc-live",
 ];
-// NOTE: rpc.bdagscan.com is deliberately excluded — confirmed as a diverged
-// fork (millions of blocks behind, block-hash-inconsistent with every other
-// independently-run node) via https://bdagexplorer.com/leaderboard.html#rpc-ranking.
+// The RPC endpoints Nodal currently connects through (the community-run node set).
+// Endpoints are added as further operators prove reliable; the RPC status panel
+// below checks them live from the visitor's own browser.
 const BLOCKDAG_EXPLORER = "https://explorer.blockdag.engineering/";
 
 const WalletContext = createContext(null);
