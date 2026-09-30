@@ -111,6 +111,18 @@ Common `MS_SIG` / `MS_ARGS` values:
 
 **Never** submit `renounceOwnership()`. It would lock these controls forever.
 
+## Source verification
+
+- **NodalRouter** is verified on [explorer.bdagexplorer.com](https://explorer.bdagexplorer.com/address/0xA06f8a856896aA1836f04F758C1E5Ac5dbe24672)
+  ("partial match": identical code, only Remix's metadata fingerprint differs). Source: `verify/NodalRouter.flat.sol`
+  (OpenZeppelin 5.0.2 inlined), with Solidity 0.8.24, optimizer on / 200 runs, EVM `berlin`.
+- **NodalReefAdapter** can't be verified on that explorer yet. Its verifier compares runtime bytecode byte-for-byte
+  and doesn't mask Solidity *immutables*. The adapter stores the Reef router address as an immutable in 8 places.
+  Compiling `verify/NodalReefAdapter.sol` with the same settings gives code identical to the deployed contract once
+  those 8 slots (byte offsets 278, 510, 663, 885, 1012, 1187, 1421, 1498) are masked. Every one of them holds
+  `0xbd6fbA41Ab84292163A599510a12d6Bf8B7CCc76` (Reef's router), and the explorer can read that value directly via the
+  adapter's public `reef()` function.
+
 ## Disclaimer
 
 Experimental software on an early-stage chain. The source is published and has been checked with Slither, but it has not had an independent third-party audit. Contract ownership is held by a 2-of-2 hardware-wallet multisig.
