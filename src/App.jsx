@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useContext, createContext } from "react";
+import LiveSwap from "./LiveSwap.jsx";
 import {
   ArrowDownUp,
   Check,
@@ -372,13 +373,8 @@ const TOKENS = [...NATIVE_TOKENS, ...BRIDGED_TOKENS];
 const NODAL_FEE_RATE = 0.0015; // 0.15%
 const NODAL_FEE_LABEL = "0.15%";
 
-// Used ONLY inside the "Try it" interactive preview below, to demonstrate the UI mechanics
-// with plausible-looking numbers. These are NOT real integrations, confirmed venues, or
-// promises of what will launch here — deliberately generic names so nobody mistakes them
-// for an actual product. See the disclaimer directly above the widget. Kept fully separate
-// from LIVE_SOURCES and the real-status copy in the Sources section.
-// Live, on-chain liquidity sources registered with NodalRouter. Kept separate from
-// DEMO_SOURCES so illustrative preview data can never be mistaken for real status.
+
+// Live, on-chain liquidity sources registered with NodalRouter (shown in the Sources section).
 const NODAL_ROUTER_ADDRESS = "0xA06f8a856896aA1836f04F758C1E5Ac5dbe24672";
 const LIVE_SOURCES = [
   {
@@ -390,23 +386,18 @@ const LIVE_SOURCES = [
   },
 ];
 
-const DEMO_SOURCES = [
-  { id: "demo-a", name: "Demo venue A", note: "Simulated for this preview only", spreadFactor: 0.997, feeLabel: "0.30%" },
-  { id: "demo-b", name: "Demo venue B", note: "Simulated for this preview only", spreadFactor: 0.985, feeLabel: "1.20%" },
-];
-
 const STEPS = [
   { n: "01", title: "Enter your trade", body: "Pick the two tokens and the amount. Nodal reads live balances so you always know what you're working with." },
   { n: "02", title: "Every source gets queried", body: "Nodal calls each registered DEX's router in parallel and reads back real output amounts. Today that's one source, Reef; each new DEX is added with a single on-chain transaction as it launches." },
   { n: "03", title: "Quotes are normalized", body: "Fees and price impact are priced in before anything is ranked, so what you compare is the actual amount you'd receive, not a headline rate." },
-  { n: "04", title: "You execute, in one signature", body: "Your wallet signs a single transaction against the winning venue. Nodal never takes custody of your funds at any point." },
+  { n: "04", title: "You execute, in one transaction", body: "Your wallet signs one swap through NodalRouter (plus a one-time approval of the exact amount for tokens). Funds pass through in that single transaction and nothing is held afterwards." },
 ];
 
 const FEATURES = [
   { icon: Gauge, color: "#3FD9EA", title: "Best execution", body: "Routes are ranked by net output after fees, not by whichever venue is easiest to integrate." },
-  { icon: ShieldCheck, color: "#A64CF0", title: "Non-custodial", body: "Your assets stay in your wallet until the moment you sign. Nodal never holds a balance." },
+  { icon: ShieldCheck, color: "#A64CF0", title: "Non-custodial", body: "Your assets stay in your wallet until you sign. Each swap settles in one transaction, and Nodal never holds a balance between trades." },
   { icon: Eye, color: "#FF8266", title: "Transparent routing", body: "Every quote shows its source, fee, and net output side by side — nothing hidden behind a single blended number." },
-  { icon: Globe2, color: "#3FD9EA", title: "Top-10 asset support", body: "Trade the ten most liquid assets in crypto as bridged tokens, alongside BlockDAG's own native assets." },
+  { icon: Globe2, color: "#3FD9EA", title: "Top-10 asset support (planned)", body: "Once a BlockDAG bridge is live, the ten most liquid assets in crypto can be traded as bridged tokens alongside BlockDAG's own." },
   { icon: Network, color: "#A64CF0", title: "Built for chain 1404", body: "Not a generic multi-chain wrapper — routing logic is written specifically for BlockDAG's liquidity layout." },
   { icon: SlidersHorizontal, color: "#FF8266", title: "Slippage controls", body: "Set your own tolerance before you sign. No trade executes outside the bounds you set." },
 ];
@@ -414,7 +405,7 @@ const FEATURES = [
 const FAQS = [
   { q: "What is Nodal?", a: "Nodal is a trade routing layer for BlockDAG (chain ID 1404). Instead of trading against a single DEX, you submit a trade once and Nodal compares it across every liquidity source it supports, then routes you to whichever one returns the most." },
   { q: "Which chain does this run on?", a: "BlockDAG mainnet exclusively, chain ID 1404." },
-  { q: "Does Nodal ever hold my funds?", a: "No. Nodal is non-custodial — every trade is a direct signature from your own wallet to the chosen DEX's contract. There is no intermediate holding step." },
+  { q: "Does Nodal ever hold my funds?", a: "Not between trades. When you swap, your tokens pass through the NodalRouter contract to the chosen DEX and the proceeds come straight back to your wallet, all inside one transaction. If anything fails, including the price moving past your slippage limit, the whole transaction reverts and nothing moves. For tokens (not BDAG) you first approve NodalRouter for exactly the amount you're swapping, never an unlimited allowance." },
   { q: "What does Nodal charge?", a: `Nodal adds a small routing fee — ${NODAL_FEE_LABEL} — on top of whatever fee the underlying DEX charges. It's broken out as its own line item before you confirm, never folded invisibly into the quoted rate.` },
   { q: "Which liquidity sources are live right now?", a: "One: Reef, an AMM DEX on chain 1404. Reef is built by the same team as Nodal — we say so up front because Nodal's job is to route you to the best price, and with a single source there is nothing to compare yet. More sources are added, with one on-chain transaction each, as other DEXs launch real liquidity." },
   { q: "Can I bridge assets in from other chains?", a: "There's no official BlockDAG bridge live yet. The Bridge tab models the lock-and-mint flow you'd expect once one launches — it's a preview of the UI, not a working transfer. Don't send funds expecting them to arrive until a real bridge contract exists and has been audited." },
@@ -1077,39 +1068,16 @@ function Footer() {
 
 /* ---------------- Product: tabs, swap, bridge ---------------- */
 
-function TokenSelect({ value, onChange, options }) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14, background: "#171F30", border: "1px solid #FFFFFF1A", borderRadius: 999, padding: "7px 14px", color: "#3FD9EA", cursor: "pointer" }}
-    >
-      {NATIVE_TOKENS.filter((t) => options.includes(t.symbol)).length > 0 && (
-        <optgroup label="Native">
-          {NATIVE_TOKENS.filter((t) => options.includes(t.symbol)).map((t) => (
-            <option key={t.symbol} value={t.symbol}>{t.symbol}</option>
-          ))}
-        </optgroup>
-      )}
-      {BRIDGED_TOKENS.filter((t) => options.includes(t.symbol)).length > 0 && (
-        <optgroup label="Bridged (top 10)">
-          {BRIDGED_TOKENS.filter((t) => options.includes(t.symbol)).map((t) => (
-            <option key={t.symbol} value={t.symbol}>{t.symbol}</option>
-          ))}
-        </optgroup>
-      )}
-    </select>
-  );
-}
 
 function ProductSection() {
+  const wallet = useWallet();
   const [tab, setTab] = useState("swap");
   return (
     <Section id="app">
       <Eyebrow>Try it</Eyebrow>
-      <h2 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 700 }}>Route a trade or bridge an asset in.</h2>
+      <h2 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 700 }}>Swap on BlockDAG, live.</h2>
       <p style={{ margin: "0 0 28px", fontSize: 15, color: "#8B93A7", maxWidth: 560 }}>
-        This preview uses illustrative quotes and prices. Live routing through Reef already works on-chain via the NodalRouter contract; wiring this widget to it is next. The Bridge tab is a preview only.
+        Quotes come straight from NodalRouter on chain 1404 and trades execute on-chain. Beta limits apply per trade. The Bridge tab is still a preview only, since no BlockDAG bridge exists yet.
       </p>
 
       <div className="nodal-scope" style={{ display: "flex", gap: 6, marginBottom: 18, background: "#0E1420", border: "1px solid #FFFFFF14", borderRadius: 12, padding: 5, maxWidth: 480 }}>
@@ -1135,159 +1103,8 @@ function ProductSection() {
         ))}
       </div>
 
-      {tab === "swap" ? <SwapTool /> : <BridgeTool />}
+      {tab === "swap" ? <LiveSwap wallet={wallet} /> : <BridgeTool />}
     </Section>
-  );
-}
-
-function SwapTool() {
-  const { address, connect } = useWallet();
-  const [fromToken, setFromToken] = useState("BDAG");
-  const [toToken, setToToken] = useState("USDC");
-  const [amount, setAmount] = useState("100");
-  const [isRouting, setIsRouting] = useState(false);
-  const [results, setResults] = useState(null);
-  const [selectedId, setSelectedId] = useState(null);
-  const [confirmed, setConfirmed] = useState(false);
-  const timeoutRef = useRef(null);
-
-  useEffect(() => () => clearTimeout(timeoutRef.current), []);
-
-  const swapTokens = () => {
-    setFromToken(toToken);
-    setToToken(fromToken);
-    setResults(null);
-    setSelectedId(null);
-    setConfirmed(false);
-  };
-
-  const findRoutes = () => {
-    const amt = parseFloat(amount);
-    if (!amt || amt <= 0 || fromToken === toToken) return;
-
-    setIsRouting(true);
-    setResults(null);
-    setSelectedId(null);
-    setConfirmed(false);
-
-    const from = TOKENS.find((t) => t.symbol === fromToken);
-    const to = TOKENS.find((t) => t.symbol === toToken);
-    const baseOut = (amt * from.price) / to.price;
-
-    timeoutRef.current = setTimeout(() => {
-      const routes = DEMO_SOURCES
-        .map((s) => ({ ...s, out: baseOut * s.spreadFactor * (0.995 + Math.random() * 0.01) }))
-        .sort((a, b) => b.out - a.out);
-      setResults(routes);
-      setSelectedId(routes[0].id);
-      setIsRouting(false);
-    }, 1400);
-  };
-
-  const confirmTrade = () => {
-    if (!selectedId) return;
-    setConfirmed(true);
-  };
-
-  const allSymbols = TOKENS.map((t) => t.symbol);
-  const selectedRoute = results && selectedId ? results.find((r) => r.id === selectedId) : null;
-  const grossOut = selectedRoute ? selectedRoute.out : 0;
-  const nodalFeeAmt = grossOut * NODAL_FEE_RATE;
-  const netOut = grossOut - nodalFeeAmt;
-
-  return (
-    <div className="nodal-scope nodal-panel" style={{ maxWidth: 480, background: "#121826", border: "1px solid #FFFFFF14", borderRadius: 16, padding: "24px 24px 22px", boxShadow: "0 30px 60px -30px #00000090" }}>
-      <FieldBlock label="You pay" token={fromToken} onTokenChange={setFromToken} amount={amount} onAmountChange={setAmount} editableAmount balanceHint="Balance: 128.40" allSymbols={allSymbols} />
-
-      <div style={{ display: "flex", justifyContent: "center", margin: "8px 0" }}>
-        <button onClick={swapTokens} aria-label="Reverse the direction of the trade" style={{ background: "#171F30", border: "1px solid #FFFFFF1A", borderRadius: "50%", width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#3FD9EA" }}>
-          <ArrowDownUp size={16} strokeWidth={1.75} />
-        </button>
-      </div>
-
-      <FieldBlock
-        label="You receive"
-        token={toToken}
-        onTokenChange={setToToken}
-        amount={results && selectedId ? formatAmount(netOut) : ""}
-        editableAmount={false}
-        placeholder="—"
-        allSymbols={allSymbols}
-      />
-
-      <button
-        onClick={findRoutes}
-        disabled={isRouting || !amount || parseFloat(amount) <= 0 || fromToken === toToken}
-        style={{
-          width: "100%",
-          marginTop: 20,
-          padding: "13px 18px",
-          borderRadius: 10,
-          border: "none",
-          background: fromToken === toToken ? "#2A3245" : "linear-gradient(90deg, #A64CF0, #FF8266)",
-          color: fromToken === toToken ? "#6B7280" : "#0A0E17",
-          fontFamily: "'Space Grotesk', sans-serif",
-          fontWeight: 700,
-          fontSize: 16,
-          cursor: isRouting ? "default" : "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 10,
-          opacity: isRouting ? 0.85 : 1,
-        }}
-      >
-        {isRouting ? (<><GraphMark size={18} spinning className="graph-mark" />Scanning the DAG</>) : fromToken === toToken ? "Choose two different tokens" : "Find best route"}
-      </button>
-
-      {fromToken === toToken && <p style={{ margin: "10px 0 0", fontSize: 13, color: "#6B7488" }}>Pick two different tokens to route between.</p>}
-
-      {results && (
-        <div style={{ marginTop: 22 }}>
-          <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: "#8B93A7", margin: "0 0 12px" }}>
-            {results.length} routes found for {amount} {fromToken} → {toToken}
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {results.map((r, i) => (
-              <RouteCard key={r.id} route={r} index={i} toSymbol={toToken} isBest={i === 0} isSelected={selectedId === r.id} onSelect={() => { setSelectedId(r.id); setConfirmed(false); }} />
-            ))}
-          </div>
-
-          {selectedRoute && (
-            <div style={{ marginTop: 14, border: "1px solid #FFFFFF14", borderRadius: 12, background: "#0E1420", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-              <FeeRow label={`${selectedRoute.name} output`} value={`${formatAmount(grossOut)} ${toToken}`} />
-              <FeeRow label={`Nodal routing fee (${NODAL_FEE_LABEL})`} value={`− ${formatAmount(nodalFeeAmt)} ${toToken}`} muted />
-              <div style={{ height: 1, background: "#FFFFFF14", margin: "2px 0" }} />
-              <FeeRow label="You receive" value={`${formatAmount(netOut)} ${toToken}`} bold />
-            </div>
-          )}
-
-          <button
-            onClick={address ? confirmTrade : connect}
-            disabled={(!selectedId || confirmed) && !!address}
-            style={{
-              width: "100%",
-              marginTop: 16,
-              padding: "12px 18px",
-              borderRadius: 10,
-              border: confirmed ? "none" : "1px solid #3FD9EA55",
-              background: confirmed ? "#1D8F76" : "transparent",
-              color: confirmed ? "#F4F6FB" : "#3FD9EA",
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontWeight: 700,
-              fontSize: 15,
-              cursor: confirmed ? "default" : "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-            }}
-          >
-            {confirmed ? (<><Check size={17} /> Trade confirmed</>) : address ? "Confirm and send trade" : (<><Wallet size={15} /> Connect wallet to trade</>)}
-          </button>
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -1417,79 +1234,4 @@ function BridgeTool() {
   );
 }
 
-function FieldBlock({ label, token, onTokenChange, amount, onAmountChange, editableAmount, placeholder, balanceHint, allSymbols }) {
-  return (
-    <div style={{ border: "1px solid #FFFFFF14", borderRadius: 12, background: "#0E1420", padding: "12px 14px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-        <span style={{ fontSize: 13, color: "#8B93A7" }}>{label}</span>
-        {balanceHint && <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: "#5A6478" }}>{balanceHint}</span>}
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        {editableAmount ? (
-          <input type="number" min="0" value={amount} onChange={(e) => onAmountChange(e.target.value)} placeholder="0.00" style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 19, background: "transparent", border: "none", color: "#F4F6FB", minWidth: 0 }} />
-        ) : (
-          <span style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 19, color: amount ? "#F4F6FB" : "#5A6478" }}>{amount || placeholder}</span>
-        )}
-        <TokenSelect value={token} onChange={onTokenChange} options={allSymbols} />
-      </div>
-    </div>
-  );
-}
 
-function FeeRow({ label, value, muted, bold }) {
-  return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <span style={{ fontSize: 13, color: muted ? "#6B7488" : "#8B93A7" }}>{label}</span>
-      <span
-        style={{
-          fontFamily: "'Space Mono', monospace",
-          fontSize: bold ? 15 : 13,
-          fontWeight: bold ? 700 : 400,
-          color: bold ? "#F4F6FB" : muted ? "#FF8266" : "#F4F6FB",
-        }}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function RouteCard({ route, index, toSymbol, isBest, isSelected, onSelect }) {
-  return (
-    <button
-      onClick={onSelect}
-      className="route-card"
-      style={{
-        textAlign: "left",
-        border: isSelected ? "1px solid #3FD9EA" : "1px solid #FFFFFF14",
-        background: isBest ? "#12222A" : "#0E1420",
-        boxShadow: isBest ? "0 0 0 1px #3FD9EA22, 0 8px 24px -12px #3FD9EA33" : "none",
-        borderRadius: 12,
-        padding: "13px 16px",
-        cursor: "pointer",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 12,
-        animation: `route-in 0.4s ease-out ${index * 0.12}s both`,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, background: isBest ? "linear-gradient(135deg, #3FD9EA, #A64CF0)" : "#171F30", border: isBest ? "none" : "1px solid #FFFFFF1A" }}>
-          <div style={{ width: 9, height: 9, background: isBest ? "#0A0E17" : "#3FD9EA", transform: "rotate(45deg)" }} />
-        </div>
-        <div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: "#F4F6FB", display: "flex", alignItems: "center" }}>
-            {route.name}
-            {isBest && <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: "#3FD9EA", marginLeft: 8, border: "1px solid #3FD9EA55", borderRadius: 999, padding: "2px 8px" }}>best route</span>}
-          </div>
-          <div style={{ fontSize: 12, color: "#8B93A7" }}>{route.note} · fee {route.feeLabel}</div>
-        </div>
-      </div>
-      <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, color: "#F4F6FB", textAlign: "right", whiteSpace: "nowrap" }}>
-        {formatAmount(route.out)}
-        <div style={{ fontSize: 11, color: "#5A6478" }}>{toSymbol}</div>
-      </div>
-    </button>
-  );
-}

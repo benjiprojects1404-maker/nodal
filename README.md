@@ -2,7 +2,7 @@
 
 A DEX aggregator for BlockDAG (chain ID 1404). Nodal compares the liquidity sources registered with its router contract and sends each trade through whichever one returns the most, taking a disclosed 0.15% routing fee.
 
-**Status: beta.** The router is live on BlockDAG mainnet with **one liquidity source, Reef** (registered 30 Sep 2026 via `NodalReefAdapter`; Reef is built by the same team as Nodal). Trades are capped at 100 BDAG and 1,000,000 NOCAP each during the beta. The website's swap and bridge widgets are still labelled previews and don't send transactions; live trades currently go through the contract directly.
+**Status: beta.** The router is live on BlockDAG mainnet with **one liquidity source, Reef** (registered 30 Sep 2026 via `NodalReefAdapter`; Reef is built by the same team as Nodal). Trades are capped at 100 BDAG and 1,000,000 NOCAP each during the beta. The website's Swap tab trades live through NodalRouter; the Bridge tab is still a labelled preview.
 
 - Website: https://nodal-gamma-seven.vercel.app
 - Chain: BlockDAG, chain ID `1404` (`0x57c`)
