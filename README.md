@@ -2,7 +2,7 @@
 
 A DEX aggregator for BlockDAG (chain ID 1404). Nodal compares the liquidity sources registered with its router contract and sends each trade through whichever one returns the most, taking a disclosed 0.15% routing fee.
 
-**Status: beta.** The router is deployed on BlockDAG mainnet (the community / canonical chain) with **no liquidity sources registered yet**, so no trading is live and no user funds are at risk. The swap and bridge widgets on the website are clearly labelled previews. They don't send transactions.
+**Status: beta.** The router is live on BlockDAG mainnet with **one liquidity source, Reef** (registered 30 Sep 2026 via `NodalReefAdapter`; Reef is built by the same team as Nodal). Trades are capped at 100 BDAG and 1,000,000 NOCAP each during the beta. The website's swap and bridge widgets are still labelled previews and don't send transactions; live trades currently go through the contract directly.
 
 - Website: https://nodal-gamma-seven.vercel.app
 - Chain: BlockDAG, chain ID `1404` (`0x57c`)
@@ -14,6 +14,7 @@ A DEX aggregator for BlockDAG (chain ID 1404). Nodal compares the liquidity sour
 |---|---|
 | NodalRouter | `0xA06f8a856896aA1836f04F758C1E5Ac5dbe24672` |
 | Treasury (fee recipient) | `0x8A8F4E1d70F889C5aA2579E8ff2826e4fE8B2127` |
+| NodalReefAdapter (registered as source `reef`) | `0x4b60D344eDA7E3D859739B5AbC1176d756E22d56` |
 
 Build on the community / canonical side of chain 1404 only. `rpc.bdagscan.com` / `bdagscan.com` serve a diverged fork and are deliberately excluded everywhere in this repo. See https://bdagexplorer.com/leaderboard.html#rpc-ranking for live status.
 
@@ -48,7 +49,7 @@ Pushes to `main` redeploy the site on Vercel.
 
 ## Adding a liquidity source
 
-When a real DEX is confirmed live on the canonical chain, the contract owner registers its router address with one `registerSource(id, router, name)` transaction. Nothing on the website names a specific DEX until that happens.
+When a new DEX has real liquidity, the contract owner registers its router address with one `registerSource(id, router, name)` transaction.
 
 ## Disclaimer
 

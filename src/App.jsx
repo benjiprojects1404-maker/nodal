@@ -376,8 +376,20 @@ const NODAL_FEE_LABEL = "0.15%";
 // with plausible-looking numbers. These are NOT real integrations, confirmed venues, or
 // promises of what will launch here — deliberately generic names so nobody mistakes them
 // for an actual product. See the disclaimer directly above the widget. Kept fully separate
-// from the real-status copy in the Sources section, which reflects that zero real sources
-// exist on chain 1404's canonical network today.
+// from LIVE_SOURCES and the real-status copy in the Sources section.
+// Live, on-chain liquidity sources registered with NodalRouter. Kept separate from
+// DEMO_SOURCES so illustrative preview data can never be mistaken for real status.
+const NODAL_ROUTER_ADDRESS = "0xA06f8a856896aA1836f04F758C1E5Ac5dbe24672";
+const LIVE_SOURCES = [
+  {
+    name: "Reef",
+    kind: "AMM DEX (Uniswap V2-style)",
+    adapter: "0x4b60D344eDA7E3D859739B5AbC1176d756E22d56",
+    router: "0xbd6fbA41Ab84292163A599510a12d6Bf8B7CCc76",
+    since: "30 Sep 2026",
+  },
+];
+
 const DEMO_SOURCES = [
   { id: "demo-a", name: "Demo venue A", note: "Simulated for this preview only", spreadFactor: 0.997, feeLabel: "0.30%" },
   { id: "demo-b", name: "Demo venue B", note: "Simulated for this preview only", spreadFactor: 0.985, feeLabel: "1.20%" },
@@ -385,7 +397,7 @@ const DEMO_SOURCES = [
 
 const STEPS = [
   { n: "01", title: "Enter your trade", body: "Pick the two tokens and the amount. Nodal reads live balances so you always know what you're working with." },
-  { n: "02", title: "Every source gets queried", body: "Nodal calls each registered DEX's router in parallel and reads back real output amounts. No source is live on chain 1404's canonical network yet — the contract is deployed and ready, and the first real source gets added the moment one exists." },
+  { n: "02", title: "Every source gets queried", body: "Nodal calls each registered DEX's router in parallel and reads back real output amounts. Today that's one source, Reef; each new DEX is added with a single on-chain transaction as it launches." },
   { n: "03", title: "Quotes are normalized", body: "Fees and price impact are priced in before anything is ranked, so what you compare is the actual amount you'd receive, not a headline rate." },
   { n: "04", title: "You execute, in one signature", body: "Your wallet signs a single transaction against the winning venue. Nodal never takes custody of your funds at any point." },
 ];
@@ -404,7 +416,7 @@ const FAQS = [
   { q: "Which chain does this run on?", a: "BlockDAG mainnet exclusively, chain ID 1404." },
   { q: "Does Nodal ever hold my funds?", a: "No. Nodal is non-custodial — every trade is a direct signature from your own wallet to the chosen DEX's contract. There is no intermediate holding step." },
   { q: "What does Nodal charge?", a: `Nodal adds a small routing fee — ${NODAL_FEE_LABEL} — on top of whatever fee the underlying DEX charges. It's broken out as its own line item before you confirm, never folded invisibly into the quoted rate.` },
-  { q: "Which liquidity sources are live right now?", a: "None yet. NodalRouter is deployed on BlockDAG's canonical chain, but no DEX with real liquidity has launched there as of today — BlockDAG's own roadmap lists its native DEX under a later phase. The contract is ready and waiting; adding a source is a single transaction once one genuinely exists." },
+  { q: "Which liquidity sources are live right now?", a: "One: Reef, an AMM DEX on chain 1404. Reef is built by the same team as Nodal — we say so up front because Nodal's job is to route you to the best price, and with a single source there is nothing to compare yet. More sources are added, with one on-chain transaction each, as other DEXs launch real liquidity." },
   { q: "Can I bridge assets in from other chains?", a: "There's no official BlockDAG bridge live yet. The Bridge tab models the lock-and-mint flow you'd expect once one launches — it's a preview of the UI, not a working transfer. Don't send funds expecting them to arrive until a real bridge contract exists and has been audited." },
   { q: "Has this been audited?", a: "It's been run through Slither (an open-source static analyzer) — every finding was reviewed, a few real issues were fixed, and the rest were confirmed as false positives. That's a legitimate first gate, but it's automated, not a paid third-party human audit. No human security audit has been completed yet. Treat it accordingly until that changes." },
 ];
@@ -551,7 +563,7 @@ function BetaBanner() {
         </button>
         {open && (
           <ul style={{ margin: "10px 0 0", padding: "0 0 0 18px", fontSize: 13, lineHeight: 1.6, color: "#C9B3AD" }}>
-            <li>No live liquidity sources yet — the contract is deployed and ready to activate the moment a real one appears on chain.</li>
+            <li>One live liquidity source today (Reef, built by the same team as Nodal). Trades are capped at 100 BDAG each during the beta.</li>
             <li>Checked with Slither (open-source static analysis), but no paid third-party human audit yet.</li>
             <li>Contract ownership is a single key today, not yet a multisig.</li>
             <li>The Bridge tab previews a lock-and-mint flow — no official BlockDAG bridge exists yet.</li>
@@ -687,7 +699,7 @@ function Hero() {
           The routing layer for <span style={{ color: "#3FD9EA" }}>BlockDAG</span> DeFi.
         </h1>
         <p style={{ margin: "0 auto 32px", fontSize: 17, lineHeight: 1.6, color: "#8B93A7", maxWidth: 600 }}>
-          Nodal compares every liquidity source on chain 1404 in real time and routes each trade to whichever one returns the most. Once a bridge goes live, it will let you bring in the top assets in crypto too — non-custodial, transparent, built for this chain.
+          Nodal quotes every liquidity source registered on chain 1404 and routes each trade to whichever one returns the most. Once a bridge goes live, it will let you bring in the top assets in crypto too — non-custodial, transparent, built for this chain.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
           <a href="#app" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 15, background: "linear-gradient(90deg, #A64CF0, #FF8266)", color: "#0A0E17", padding: "13px 24px", borderRadius: 10, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
@@ -743,7 +755,7 @@ function StatsBar() {
     { label: "BDAG / USD", value: priceDisplay, isPrice: true },
     { label: "Chain ID", value: "1404" },
     { label: "Assets supported", value: String(TOKENS.length) },
-    { label: "Live DEX sources", value: "0" },
+    { label: "Live DEX sources", value: String(LIVE_SOURCES.length) },
     { label: "Routing fee", value: NODAL_FEE_LABEL },
   ];
   return (
@@ -820,50 +832,34 @@ function Sources() {
       <Eyebrow color="#FF8266">Liquidity sources</Eyebrow>
       <h2 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 700 }}>What Nodal routes across today.</h2>
       <p style={{ margin: "0 0 24px", fontSize: 15, color: "#8B93A7", maxWidth: 560 }}>
-        Zero DEXs have launched real liquidity on chain 1404's canonical network as of today.
-        Rather than name a specific integration that might not materialize — BlockDAG's own
-        native DEX is still an unconfirmed roadmap item, not something live — Nodal's contract
-        is built to add any compatible source the moment one proves real. That's a single
-        on-chain transaction, not a redeploy.
+        Every source below is registered on-chain with NodalRouter and quoted live. New DEXs are
+        added with a single transaction once they have real liquidity — no redeploy.
       </p>
 
-      <div
-        style={{
-          border: "1px dashed #FFFFFF22",
-          borderRadius: 12,
-          background: "#121826",
-          padding: "20px 22px",
-          display: "flex",
-          alignItems: "flex-start",
-          gap: 14,
-        }}
-      >
-        <div
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 9,
-            border: "1px dashed #FFFFFF33",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            color: "#6B7488",
-            fontFamily: "'Space Mono', monospace",
-            fontSize: 16,
-          }}
-        >
-          ?
-        </div>
-        <div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: "#F4F6FB" }}>No confirmed source yet</div>
-          <p style={{ margin: "6px 0 0", fontSize: 13, lineHeight: 1.6, color: "#8B93A7" }}>
-            We're watching WelshDAG's dApp library (reads deployed contracts straight off the
-            canonical chain, not marketing claims) and BlockDAG's own community channels for the
-            first DEX with real liquidity. Nothing is being promised on a timeline — this card
-            updates the day something real shows up, not before.
-          </p>
-        </div>
+      <div style={{ display: "grid", gap: 12 }}>
+        {LIVE_SOURCES.map((src) => (
+          <div
+            key={src.name}
+            style={{ border: "1px solid #3FD9EA33", borderRadius: 12, background: "#121826", padding: "20px 22px" }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 17, fontWeight: 700, color: "#F4F6FB" }}>{src.name}</span>
+              <span style={{ fontSize: 11, fontFamily: "'Space Mono', monospace", color: "#3FD9EA", border: "1px solid #3FD9EA55", borderRadius: 999, padding: "2px 9px" }}>
+                LIVE
+              </span>
+              <span style={{ fontSize: 13, color: "#8B93A7" }}>{src.kind} · since {src.since}</span>
+            </div>
+            <p style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.6, color: "#C9B3AD" }}>
+              Disclosure: Reef and Nodal are built by the same team. While Reef is the only source,
+              Nodal routes through it rather than comparing venues.
+            </p>
+            <div style={{ marginTop: 12, fontSize: 12, lineHeight: 1.8, color: "#6B7488", fontFamily: "'Space Mono', monospace", wordBreak: "break-all" }}>
+              <div>Nodal adapter: {src.adapter}</div>
+              <div>Reef router: {src.router}</div>
+              <div>NodalRouter: {NODAL_ROUTER_ADDRESS}</div>
+            </div>
+          </div>
+        ))}
       </div>
 
       <div style={{ marginTop: 28 }}>
@@ -1113,7 +1109,7 @@ function ProductSection() {
       <Eyebrow>Try it</Eyebrow>
       <h2 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 700 }}>Route a trade or bridge an asset in.</h2>
       <p style={{ margin: "0 0 28px", fontSize: 15, color: "#8B93A7", maxWidth: 560 }}>
-        This preview uses illustrative quotes and prices — nothing here is wired to on-chain pools or a live bridge yet.
+        This preview uses illustrative quotes and prices. Live routing through Reef already works on-chain via the NodalRouter contract; wiring this widget to it is next. The Bridge tab is a preview only.
       </p>
 
       <div className="nodal-scope" style={{ display: "flex", gap: 6, marginBottom: 18, background: "#0E1420", border: "1px solid #FFFFFF14", borderRadius: 12, padding: 5, maxWidth: 480 }}>
