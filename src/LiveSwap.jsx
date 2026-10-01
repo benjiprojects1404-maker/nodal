@@ -532,8 +532,8 @@ export default function LiveSwap({ wallet }) {
 
   return (
     <div className="nodal-swap-grid">
-    <style>{`.nodal-swap-grid{display:grid;grid-template-columns:minmax(0,480px) minmax(0,1fr);gap:20px;align-items:start}@media (max-width:900px){.nodal-swap-grid{grid-template-columns:minmax(0,1fr)}}`}</style>
-    <div className="nodal-scope nodal-panel" data-testid="live-swap" style={{ maxWidth: 480, background: "#121826", border: "1px solid #FFFFFF14", borderRadius: 16, padding: "24px 24px 22px", boxShadow: "0 30px 60px -30px #00000090" }}>
+    <style>{`.nodal-swap-grid{display:grid;grid-template-columns:minmax(0,480px) minmax(0,1fr);gap:20px;align-items:stretch}.nodal-swap-grid>*{box-sizing:border-box}@media (max-width:900px){.nodal-swap-grid{grid-template-columns:minmax(0,1fr)}}`}</style>
+    <div className="nodal-scope nodal-panel" data-testid="live-swap" style={{ maxWidth: 480, width: "100%", display: "flex", flexDirection: "column", background: "#121826", border: "1px solid #FFFFFF14", borderRadius: 16, padding: "24px 24px 22px", boxShadow: "0 30px 60px -30px #00000090" }}>
       <style>{`@keyframes nodal-spin-k { to { transform: rotate(360deg); } } .nodal-spin { animation: nodal-spin-k 1s linear infinite; }`}</style>
 
       {status.paused && (
@@ -703,7 +703,7 @@ export default function LiveSwap({ wallet }) {
         </div>
       )}
 
-      <p style={{ margin: "14px 0 0", fontSize: 11.5, lineHeight: 1.55, color: "#5A6478" }}>
+      <p style={{ margin: "auto 0 0", paddingTop: 14, fontSize: 11.5, lineHeight: 1.55, color: "#5A6478" }}>
         Trades go through NodalRouter ({short(CFG.router)}) in a single transaction: your tokens reach the DEX and the proceeds come straight back to your wallet, or the whole trade reverts. For ERC-20s you first approve exactly the amount you're swapping, never an unlimited allowance.
       </p>
     </div>
@@ -800,7 +800,7 @@ function RouteDetails({ quote, quoting, fromToken, toToken, tokens, feeBps, capN
         </div>
       </div>
 
-      <div style={card}>
+      <div style={{ ...card, flex: 1 }}>
         <h3 style={h}>Recent trades through Nodal</h3>
         {recent.state === "loading" && <p style={{ ...note, marginTop: 0 }}>Reading the chain…</p>}
         {recent.state === "error" && <p style={{ ...note, marginTop: 0 }}>Couldn't load recent trades from the RPC just now.</p>}
