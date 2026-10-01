@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useContext, createContext } from "react";
 import { FALLBACK_RPCS, loadRpcRegistry } from "./rpcRegistry.js";
-import LiveSwap from "./LiveSwap.jsx";
+import LiveSwap, { loadLiveTokens } from "./LiveSwap.jsx";
 import {
   ArrowDownUp,
   Check,
@@ -696,49 +696,22 @@ function Hero() {
   );
 }
 
-// ---- BDAG/USD price (off-chain, informational only) ----
-// Same CoinGecko id Handshake uses, confirmed correct: coingecko.com/en/coins/blockdag
-const COINGECKO_ID = "blockdag";
-function useBdagPrice() {
-  const [price, setPrice] = useState(null);
-  const [change, setChange] = useState(null);
-  const [status, setStatus] = useState("loading"); // loading | ok | error
-
+function StatsBar() {
+  // Real numbers only: tokens with a live pool are read from the chain. No dollar price is shown,
+  // because the community chain's BDAG has no established outside market price.
+  const [tokenCount, setTokenCount] = useState(null);
   useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${COINGECKO_ID}&vs_currencies=usd&include_24hr_change=true`);
-        const data = await res.json();
-        const info = data[COINGECKO_ID];
-        if (cancelled) return;
-        if (!info) { setStatus("error"); return; }
-        setPrice(info.usd);
-        setChange(info.usd_24h_change);
-        setStatus("ok");
-      } catch {
-        if (!cancelled) setStatus("error");
-      }
-    }
-    load();
-    const id = setInterval(load, 60000);
-    return () => { cancelled = true; clearInterval(id); };
+    let alive = true;
+    loadLiveTokens().then((l) => alive && setTokenCount(l.length)).catch(() => alive && setTokenCount(-1));
+    return () => { alive = false; };
   }, []);
 
-  return { price, change, status };
-}
-
-function StatsBar() {
-  const { price, change, status } = useBdagPrice();
-  const priceDisplay =
-    status === "ok" && price != null ? `$${price < 0.01 ? price.toFixed(6) : price.toFixed(4)}` : status === "error" ? "n/a" : "…";
-
   const stats = [
-    { label: "BDAG / USD", value: priceDisplay, isPrice: true },
     { label: "Chain ID", value: "1404" },
-    { label: "Assets supported", value: String(TOKENS.length) },
+    { label: "Tokens you can swap", value: tokenCount === null ? "…" : tokenCount < 0 ? "–" : String(tokenCount) },
     { label: "Live DEX sources", value: String(LIVE_SOURCES.length) },
     { label: "Routing fee", value: NODAL_FEE_LABEL },
+    { label: "Keys per admin action", value: "2 of 2" },
   ];
   return (
     <div className="nodal-scope" style={{ borderTop: "1px solid #FFFFFF10", borderBottom: "1px solid #FFFFFF10" }}>
@@ -747,12 +720,6 @@ function StatsBar() {
           <div key={s.label}>
             <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 22, fontWeight: 700, color: "#F4F6FB" }}>
               {s.value}
-              {s.isPrice && status === "ok" && change != null && (
-                <span style={{ fontSize: 12, fontWeight: 700, marginLeft: 6, color: change >= 0 ? "#3FD9EA" : "#FF8266" }}>
-                  {change >= 0 ? "+" : ""}
-                  {change.toFixed(1)}%
-                </span>
-              )}
             </div>
             <div style={{ fontSize: 12, color: "#6B7488", marginTop: 4 }}>{s.label}</div>
           </div>
