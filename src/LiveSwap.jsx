@@ -154,6 +154,76 @@ async function discoverTokens(ro) {
   return [{ ...NATIVE }, ...infos];
 }
 
+// Shared, cached token discovery (also used by the stats bar on the home page).
+let _liveTokens = null;
+export function loadLiveTokens() {
+  if (!_liveTokens) {
+    _liveTokens = readProvider()
+      .then(discoverTokens)
+      .catch((e) => {
+        _liveTokens = null;
+        resetReadProvider();
+        throw e;
+      });
+  }
+  return _liveTokens;
+}
+
+// Recent swaps through NodalRouter, newest first, read from the chain's SwapExecuted events.
+const SWAP_EVENT = new Interface([
+  "event SwapExecuted(address indexed user, bytes32 indexed sourceId, address tokenIn, address tokenOut, uint256 amountIn, uint256 grossAmountOut, uint256 fee, uint256 netAmountOut)",
+]);
+const ROUTER_FROM_BLOCK = Number(env.VITE_ROUTER_FROM_BLOCK || 21000000); // safely before NodalRouter's deployment (Sep 18, 2026)
+async function loadRecentTrades(tokens, want = 5) {
+  const ro = await readProvider();
+  const head = await ro.getBlockNumber();
+  const topic = SWAP_EVENT.getEvent("SwapExecuted").topicHash;
+  const found = [];
+  let span = 500000;
+  for (let to = head; to > ROUTER_FROM_BLOCK && found.length < want; ) {
+    const from = Math.max(ROUTER_FROM_BLOCK, to - span + 1);
+    let logs;
+    try {
+      logs = await ro.getLogs({ address: CFG.router, topics: [topic], fromBlock: from, toBlock: to });
+    } catch (e) {
+      if (span > 20000) { span = Math.floor(span / 4); continue; } // RPC range limit: retry smaller
+      throw e;
+    }
+    found.unshift(...logs);
+    to = from - 1;
+  }
+  const latest = found.slice(-want).reverse();
+  const bySym = (a) => {
+    if (!a || lc(a) === lc(ZeroAddress) || lc(a) === lc(CFG.wbdag)) return NATIVE;
+    return tokens.find((t) => t.address && lc(t.address) === lc(a)) || { symbol: short(a), decimals: 18 };
+  };
+  return Promise.all(
+    latest.map(async (log) => {
+      const ev = SWAP_EVENT.parseLog(log);
+      const blk = await ro.getBlock(log.blockNumber).catch(() => null);
+      let source;
+      try { source = decodeBytes32String(ev.args.sourceId); } catch { source = "source"; }
+      const tin = bySym(ev.args.tokenIn);
+      const tout = bySym(ev.args.tokenOut);
+      return {
+        hash: log.transactionHash,
+        time: blk ? Number(blk.timestamp) : null,
+        source: source.charAt(0).toUpperCase() + source.slice(1),
+        text: `${fmtUnits(ev.args.amountIn, tin.decimals)} ${tin.symbol} → ${fmtUnits(ev.args.netAmountOut, tout.decimals)} ${tout.symbol}`,
+      };
+    })
+  );
+}
+
+function timeAgo(ts) {
+  if (!ts) return "";
+  const s = Math.max(0, Math.floor(Date.now() / 1000) - ts);
+  if (s < 90) return "just now";
+  if (s < 3600) return `${Math.round(s / 60)} min ago`;
+  if (s < 86400) return `${Math.round(s / 3600)} h ago`;
+  return `${Math.round(s / 86400)} d ago`;
+}
+
 /* ---------------- component ---------------- */
 
 export default function LiveSwap({ wallet }) {
@@ -177,6 +247,8 @@ export default function LiveSwap({ wallet }) {
   const [txErr, setTxErr] = useState("");
   const [lastTx, setLastTx] = useState(null); // { hash, summary }
   const [impactArmed, setImpactArmed] = useState(false);
+  const [capNow, setCapNow] = useState(null); // beta limit for the token being paid
+  const [recent, setRecent] = useState({ state: "loading", items: [] });
 
   const quoteSeq = useRef(0);
   const sourceNames = useRef({});
@@ -191,7 +263,7 @@ export default function LiveSwap({ wallet }) {
       try {
         const ro = await readProvider();
         const router = new Contract(CFG.router, ROUTER_ABI, ro);
-        const [list, paused, feeBps] = await Promise.all([discoverTokens(ro), router.paused(), router.feeBps()]);
+        const [list, paused, feeBps] = await Promise.all([loadLiveTokens(), router.paused(), router.feeBps()]);
         if (!alive) return;
         setTokens(list);
         setStatus({ paused, feeBps: Number(feeBps) });
@@ -223,6 +295,35 @@ export default function LiveSwap({ wallet }) {
   useEffect(() => {
     refreshBalance();
   }, [refreshBalance]);
+
+  // Beta limit for the token being paid (shown in Route details before any quote).
+  useEffect(() => {
+    let alive = true;
+    setCapNow(null);
+    (async () => {
+      try {
+        const ro = await readProvider();
+        const cap = await new Contract(CFG.router, ROUTER_ABI, ro).maxAmountIn(fromToken.native ? ZeroAddress : fromToken.address);
+        if (alive) setCapNow(cap);
+      } catch {
+        /* shown as unknown */
+      }
+    })();
+    return () => { alive = false; };
+  }, [fromKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Recent trades through Nodal: on load, and again after your own swap.
+  const refreshRecent = useCallback(async () => {
+    try {
+      const items = await loadRecentTrades(tokens);
+      setRecent({ state: "ok", items });
+    } catch {
+      setRecent((r) => ({ state: r.items.length ? "ok" : "error", items: r.items }));
+    }
+  }, [tokens]);
+  useEffect(() => {
+    if (tokens.length > 1) refreshRecent();
+  }, [tokens, refreshRecent]);
 
   // Quote (debounced) whenever inputs change.
   useEffect(() => {
@@ -397,6 +498,7 @@ export default function LiveSwap({ wallet }) {
       setStage("done");
       setAmount("");
       refreshBalance();
+      setTimeout(refreshRecent, 4000);
     } catch (e) {
       setTxErr(friendlyError(e));
       setStage("idle");
@@ -429,6 +531,8 @@ export default function LiveSwap({ wallet }) {
   const boxStyle = { border: "1px solid #FFFFFF14", borderRadius: 12, background: "#0E1420", padding: "12px 14px" };
 
   return (
+    <div className="nodal-swap-grid">
+    <style>{`.nodal-swap-grid{display:grid;grid-template-columns:minmax(0,480px) minmax(0,1fr);gap:20px;align-items:start}@media (max-width:900px){.nodal-swap-grid{grid-template-columns:minmax(0,1fr)}}`}</style>
     <div className="nodal-scope nodal-panel" data-testid="live-swap" style={{ maxWidth: 480, background: "#121826", border: "1px solid #FFFFFF14", borderRadius: 16, padding: "24px 24px 22px", boxShadow: "0 30px 60px -30px #00000090" }}>
       <style>{`@keyframes nodal-spin-k { to { transform: rotate(360deg); } } .nodal-spin { animation: nodal-spin-k 1s linear infinite; }`}</style>
 
@@ -602,6 +706,117 @@ export default function LiveSwap({ wallet }) {
       <p style={{ margin: "14px 0 0", fontSize: 11.5, lineHeight: 1.55, color: "#5A6478" }}>
         Trades go through NodalRouter ({short(CFG.router)}) in a single transaction: your tokens reach the DEX and the proceeds come straight back to your wallet, or the whole trade reverts. For ERC-20s you first approve exactly the amount you're swapping, never an unlimited allowance.
       </p>
+    </div>
+    <RouteDetails
+      quote={quote}
+      quoting={quoting}
+      fromToken={fromToken}
+      toToken={toToken}
+      tokens={tokens}
+      feeBps={status.feeBps}
+      capNow={capNow}
+      recent={recent}
+    />
+    </div>
+  );
+}
+
+/* ---------------- Route details (right-hand panel) ---------------- */
+
+const POOL_FEE_PCT = 0.3; // Reef: 0.30% per pool hop, already reflected in its quote
+
+function RouteDetails({ quote, quoting, fromToken, toToken, tokens, feeBps, capNow, recent }) {
+  const card = { background: "#121826", border: "1px solid #FFFFFF14", borderRadius: 16, padding: "20px 22px" };
+  const h = { margin: "0 0 10px", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: 0.4, color: "#8B93A7", textTransform: "uppercase" };
+  const note = { margin: "8px 0 0", fontSize: 12, lineHeight: 1.55, color: "#6B7488" };
+  const sym = (a) => {
+    if (lc(a) === lc(CFG.wbdag)) return "BDAG";
+    const t = tokens.find((x) => x.address && lc(x.address) === lc(a));
+    return t ? t.symbol : short(a);
+  };
+  const hops = quote ? quote.path.length - 1 : 1;
+  const cap = quote ? quote.cap : capNow;
+
+  return (
+    <div className="nodal-scope" data-testid="route-details" style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
+      <div style={card}>
+        <h3 style={h}>Sources checked</h3>
+        {quote && toToken ? (
+          <>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {quote.all.map((q, i) => (
+                <div key={q.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, background: i === 0 ? "#3FD9EA12" : "#0E1420", border: i === 0 ? "1px solid #3FD9EA55" : "1px solid #FFFFFF10" }}>
+                  <span style={{ flex: 1, fontSize: 13, color: "#F4F6FB", fontWeight: 600 }}>{q.name}</span>
+                  {i === 0 && <span style={{ fontSize: 10.5, fontFamily: "'Space Mono', monospace", color: "#3FD9EA", border: "1px solid #3FD9EA55", borderRadius: 999, padding: "1px 7px" }}>BEST</span>}
+                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12.5, color: "#F4F6FB" }}>{fmtUnits(q.net, toToken.decimals)} {toToken.symbol}</span>
+                </div>
+              ))}
+            </div>
+            {quote.all.length === 1 && (
+              <p style={note}>Only one source is live today ({quote.all[0].name}, built by the same team as Nodal), so there is nothing to compare yet. Every new DEX that is added appears here automatically.</p>
+            )}
+          </>
+        ) : (
+          <p style={{ ...note, marginTop: 0 }}>
+            {quoting ? "Asking every source for a quote…" : "Enter an amount and Nodal asks every registered source for a quote, then routes your trade through the one that pays you the most. Today that's one source: Reef."}
+          </p>
+        )}
+      </div>
+
+      <div style={card}>
+        <h3 style={h}>Route and fees</h3>
+        {quote && toToken ? (
+          <>
+            <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+              {quote.path.map((a, i) => (
+                <React.Fragment key={a + i}>
+                  {i > 0 && <span style={{ color: "#5A6478" }}>→</span>}
+                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, fontWeight: 700, color: "#3FD9EA", background: "#171F30", border: "1px solid #FFFFFF1A", borderRadius: 999, padding: "4px 10px" }}>{sym(a)}</span>
+                </React.Fragment>
+              ))}
+              <span style={{ fontSize: 12, color: "#6B7488", marginLeft: 4 }}>{hops === 1 ? "direct pool" : `via BDAG, ${hops} pools`}</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              <Row label={`${quote.best.name} pool fee (${POOL_FEE_PCT.toFixed(2)}%${hops > 1 ? ` × ${hops}` : ""})`} value="included in quote" />
+              <Row label={`Nodal fee (${(feeBps / 100).toFixed(2)}%)`} value={`${fmtUnits(quote.best.fee, toToken.decimals)} ${toToken.symbol}`} />
+            </div>
+          </>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            <Row label="Pool fee (Reef)" value={`${POOL_FEE_PCT.toFixed(2)}% per pool`} />
+            <Row label="Nodal routing fee" value={`${(feeBps / 100).toFixed(2)}% of output`} />
+            <p style={{ ...note, marginTop: 2 }}>Pairs without a direct pool route through BDAG, which means two pools and two pool fees. Both fees are shown before you confirm.</p>
+          </div>
+        )}
+        <div style={{ height: 1, background: "#FFFFFF10", margin: "12px 0" }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+        <Row
+          label={`Beta limit per trade (${fromToken.symbol})`}
+          value={cap === null || cap === undefined ? "…" : cap === 0n ? "no limit" : `${fmtUnits(cap, fromToken.decimals)} ${fromToken.symbol}`}
+        />
+        {quote && cap > 0n && (
+          <Row label="This trade uses" value={(() => { const pct = Math.min(100, Number((quote.amountIn * 10000n) / cap) / 100); return `${pct < 10 ? pct.toFixed(1) : pct.toFixed(0)}% of the limit`; })()} />
+        )}
+        </div>
+      </div>
+
+      <div style={card}>
+        <h3 style={h}>Recent trades through Nodal</h3>
+        {recent.state === "loading" && <p style={{ ...note, marginTop: 0 }}>Reading the chain…</p>}
+        {recent.state === "error" && <p style={{ ...note, marginTop: 0 }}>Couldn't load recent trades from the RPC just now.</p>}
+        {recent.state === "ok" && recent.items.length === 0 && <p style={{ ...note, marginTop: 0 }}>No trades yet.</p>}
+        {recent.state === "ok" && recent.items.length > 0 && (
+          <div data-testid="recent-trades" style={{ display: "flex", flexDirection: "column" }}>
+            {recent.items.map((t, i) => (
+              <a key={t.hash + i} href={`${CFG.explorer}/tx/${t.hash}`} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderTop: i ? "1px solid #FFFFFF0D" : "none", textDecoration: "none" }}>
+                <span style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 12, color: "#F4F6FB", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.text}</span>
+                <span style={{ fontSize: 11.5, color: "#6B7488", whiteSpace: "nowrap" }}>via {t.source} · {timeAgo(t.time)}</span>
+                <ExternalLink size={12} color="#5A6478" style={{ flexShrink: 0 }} />
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
