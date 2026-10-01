@@ -1077,7 +1077,7 @@ function ProductSection() {
         Quotes come straight from NodalRouter on chain 1404 and trades execute on-chain. Beta limits apply per trade. The Bridge tab is still a preview only, since no BlockDAG bridge exists yet.
       </p>
 
-      <div className="nodal-scope" style={{ display: "flex", gap: 6, marginBottom: 18, background: "#0E1420", border: "1px solid #FFFFFF14", borderRadius: 12, padding: 5, maxWidth: 480 }}>
+      <div className="nodal-scope" style={{ display: "flex", gap: 6, marginBottom: 18, background: "#0E1420", border: "1px solid #FFFFFF14", borderRadius: 12, padding: 5, maxWidth: 480, boxSizing: "border-box" }}>
         {[{ id: "swap", label: "Swap" }, { id: "bridge", label: "Bridge" }].map((t) => (
           <button
             key={t.id}
