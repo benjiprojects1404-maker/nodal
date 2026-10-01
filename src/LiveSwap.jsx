@@ -173,7 +173,7 @@ export function loadLiveTokens() {
 const SWAP_EVENT = new Interface([
   "event SwapExecuted(address indexed user, bytes32 indexed sourceId, address tokenIn, address tokenOut, uint256 amountIn, uint256 grossAmountOut, uint256 fee, uint256 netAmountOut)",
 ]);
-const ROUTER_FROM_BLOCK = 21000000; // safely before NodalRouter's deployment (Sep 18, 2026)
+const ROUTER_FROM_BLOCK = Number(env.VITE_ROUTER_FROM_BLOCK || 21000000); // safely before NodalRouter's deployment (Sep 18, 2026)
 async function loadRecentTrades(tokens, want = 5) {
   const ro = await readProvider();
   const head = await ro.getBlockNumber();
@@ -789,13 +789,15 @@ function RouteDetails({ quote, quoting, fromToken, toToken, tokens, feeBps, capN
           </div>
         )}
         <div style={{ height: 1, background: "#FFFFFF10", margin: "12px 0" }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
         <Row
           label={`Beta limit per trade (${fromToken.symbol})`}
           value={cap === null || cap === undefined ? "…" : cap === 0n ? "no limit" : `${fmtUnits(cap, fromToken.decimals)} ${fromToken.symbol}`}
         />
         {quote && cap > 0n && (
-          <Row label="This trade uses" value={`${Math.min(100, Number((quote.amountIn * 10000n) / cap) / 100).toFixed(quote.amountIn * 100n < cap ? 2 : 0)}% of the limit`} />
+          <Row label="This trade uses" value={(() => { const pct = Math.min(100, Number((quote.amountIn * 10000n) / cap) / 100); return `${pct < 10 ? pct.toFixed(1) : pct.toFixed(0)}% of the limit`; })()} />
         )}
+        </div>
       </div>
 
       <div style={card}>
