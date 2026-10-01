@@ -1090,7 +1090,7 @@ function Footer() {
           <Logo size={24} />
           <span style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14 }}>nodal</span>
         </div>
-        <p style={{ margin: 0, fontSize: 13, color: "#6B7488" }}>Built for BlockDAG · chain 1404 · not audited yet · security reports: <a href="mailto:security@nodaldex.fyi" style={{ color: "#8B93A7" }}>security@nodaldex.fyi</a></p>
+        <p style={{ margin: 0, fontSize: 13, color: "#6B7488" }}>Built for BlockDAG · chain 1404 · not audited yet · security reports: <a href="mailto:security@nodaldex.fyi" style={{ color: "#8B93A7" }}>security@nodaldex.fyi</a> · <a href="/overview.pdf" target="_blank" rel="noopener" style={{ color: "#8B93A7" }}>overview brief (PDF)</a></p>
       </Section>
     </div>
   );
