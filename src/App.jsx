@@ -399,7 +399,7 @@ const FAQS = [
   { q: "What does Nodal charge?", a: `Nodal adds a small routing fee — ${NODAL_FEE_LABEL} — on top of whatever fee the underlying DEX charges. It's broken out as its own line item before you confirm, never folded invisibly into the quoted rate.` },
   { q: "Which liquidity sources are live right now?", a: "One: Reef, an AMM DEX on chain 1404. Reef is built by the same team as Nodal — we say so up front because Nodal's job is to route you to the best price, and with a single source there is nothing to compare yet. More sources are added, with one on-chain transaction each, as other DEXs launch real liquidity." },
   { q: "Can I bridge assets in from other chains?", a: "There's no official BlockDAG bridge live yet. The Bridge tab models the lock-and-mint flow you'd expect once one launches — it's a preview of the UI, not a working transfer. Don't send funds expecting them to arrive until a real bridge contract exists and has been audited." },
-  { q: "Has this been audited?", a: "It's been run through Slither (an open-source static analyzer) — every finding was reviewed, a few real issues were fixed, and the rest were confirmed as false positives. That's a legitimate first gate, but it's automated, not a paid third-party human audit. No human security audit has been completed yet. Treat it accordingly until that changes." },
+  { q: "Has this been audited?", a: (<>Not by an independent auditor yet. On 2 October 2026 NodalRouter and its Reef adapter had an AI-assisted security review: read line by line, run through Slither, tested with attacks, and matched to their published source on chain. It found no critical, high or medium issues in Nodal. <a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "#3FD9EA" }}>Read the review</a>. That review isn't an audit and can't rule out bugs, so treat Nodal as beta software until an independent audit is done.</>) },
   { q: "I found a bug or security issue. Where do I report it?", a: "Anything that could put funds at risk: email security@nodaldex.fyi privately, not in a public issue or chat, so it can be fixed (or the router paused) first. Everything else, like wrong numbers or confusing wording, can go to the team or into an issue on the project's GitHub." },
 ];
 
@@ -546,7 +546,7 @@ function BetaBanner() {
         {open && (
           <ul style={{ margin: "10px 0 0", padding: "0 0 0 18px", fontSize: 13, lineHeight: 1.6, color: "#C9B3AD" }}>
             <li>One live liquidity source today (Reef, built by the same team as Nodal). Trades are capped at 100 BDAG each during the beta.</li>
-            <li>Checked with Slither (open-source static analysis), but no paid third-party human audit yet.</li>
+            <li>AI-assisted security review completed 2 Oct 2026 (<a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "#3FD9EA" }}>read it</a>), but no independent audit yet.</li>
             <li>Admin controls (pause, fees, sources, caps) are held by a 2-of-2 hardware-wallet multisig, not a single key.</li>
             <li>The Bridge tab previews a lock-and-mint flow — no official BlockDAG bridge exists yet.</li>
           </ul>
@@ -1057,7 +1057,7 @@ function Footer() {
           <Logo size={24} />
           <span style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14 }}>nodal</span>
         </div>
-        <p style={{ margin: 0, fontSize: 13, color: "#6B7488" }}>Built for BlockDAG · chain 1404 · not audited yet · security reports: <a href="mailto:security@nodaldex.fyi" style={{ color: "#8B93A7" }}>security@nodaldex.fyi</a> · <a href="/overview.pdf" target="_blank" rel="noopener" style={{ color: "#8B93A7" }}>overview brief (PDF)</a> · built by <a href="https://benjiprojects1404-services.pages.dev" target="_blank" rel="noopener" style={{ color: "#8B93A7" }}>benjiprojects1404</a></p>
+        <p style={{ margin: 0, fontSize: 13, color: "#6B7488" }}>Built for BlockDAG · chain 1404 · not independently audited · <a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "#8B93A7" }}>security review</a> · security reports: <a href="mailto:security@nodaldex.fyi" style={{ color: "#8B93A7" }}>security@nodaldex.fyi</a> · <a href="/overview.pdf" target="_blank" rel="noopener" style={{ color: "#8B93A7" }}>overview brief (PDF)</a> · built by <a href="https://benjiprojects1404-services.pages.dev" target="_blank" rel="noopener" style={{ color: "#8B93A7" }}>benjiprojects1404</a></p>
       </Section>
     </div>
   );
