@@ -243,7 +243,7 @@ function TosGateModal() {
         position: "fixed",
         inset: 0,
         zIndex: 100,
-        background: "#0A0E17EE",
+        background: "color-mix(in srgb, var(--n-bg) 93%, transparent)",
         backdropFilter: "blur(6px)",
         display: "flex",
         alignItems: "center",
@@ -258,17 +258,17 @@ function TosGateModal() {
           maxHeight: "85vh",
           display: "flex",
           flexDirection: "column",
-          background: "#121826",
-          border: "1px solid #FFFFFF1A",
+          background: "var(--n-surface)",
+          border: "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)",
           borderRadius: 16,
-          boxShadow: "0 30px 80px -20px #000000CC",
+          boxShadow: "0 30px 80px -20px color-mix(in srgb, var(--n-black) 80%, transparent)",
         }}
       >
         <div style={{ padding: "22px 24px 14px" }}>
           <h2 id="tos-gate-title" style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif" }}>
             Before you connect a wallet
           </h2>
-          <p style={{ margin: 0, fontSize: 13, color: "#8B93A7" }}>
+          <p style={{ margin: 0, fontSize: 13, color: "var(--n-muted)" }}>
             Please read and accept the terms below. This gate only needs to happen once.
           </p>
         </div>
@@ -280,22 +280,22 @@ function TosGateModal() {
             padding: "0 24px",
             fontSize: 13,
             lineHeight: 1.6,
-            color: "#C7CCD8",
+            color: "var(--n-soft)",
             whiteSpace: "pre-wrap",
             fontFamily: "'Space Grotesk', sans-serif",
-            borderTop: "1px solid #FFFFFF14",
-            borderBottom: "1px solid #FFFFFF14",
+            borderTop: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)",
+            borderBottom: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)",
           }}
         >
           <div style={{ padding: "16px 0" }}>{NODAL_TOS_TEXT}</div>
         </div>
 
         <div style={{ padding: "18px 24px 22px", display: "flex", flexDirection: "column", gap: 12 }}>
-          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 13, color: "#F4F6FB", cursor: "pointer" }}>
+          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 13, color: "var(--n-ink)", cursor: "pointer" }}>
             <input type="checkbox" checked={agreedTerms} onChange={(e) => setAgreedTerms(e.target.checked)} style={{ marginTop: 2 }} />
             I have read and agree to the Terms of Service above.
           </label>
-          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 13, color: "#F4F6FB", cursor: "pointer" }}>
+          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 13, color: "var(--n-ink)", cursor: "pointer" }}>
             <input type="checkbox" checked={agreedJurisdiction} onChange={(e) => setAgreedJurisdiction(e.target.checked)} style={{ marginTop: 2 }} />
             I certify that I am not located in, a resident of, or accessing this
             from the United States, United Kingdom, or a jurisdiction where use
@@ -305,7 +305,7 @@ function TosGateModal() {
           <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
             <button
               onClick={declineTos}
-              style={{ flex: 1, padding: "11px 16px", borderRadius: 10, border: "1px solid #FFFFFF1A", background: "transparent", color: "#8B93A7", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
+              style={{ flex: 1, padding: "11px 16px", borderRadius: 10, border: "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)", background: "transparent", color: "var(--n-muted)", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
             >
               Cancel
             </button>
@@ -317,8 +317,8 @@ function TosGateModal() {
                 padding: "11px 16px",
                 borderRadius: 10,
                 border: "none",
-                background: canContinue ? "linear-gradient(90deg, #A64CF0, #FF8266)" : "#2A3245",
-                color: canContinue ? "#0A0E17" : "#6B7280",
+                background: canContinue ? "linear-gradient(90deg, var(--n-purple), var(--n-coral))" : "var(--n-line-strong)",
+                color: canContinue ? "var(--n-bg)" : "var(--n-dim2)",
                 fontFamily: "'Space Grotesk', sans-serif",
                 fontWeight: 700,
                 fontSize: 14,
@@ -384,12 +384,12 @@ const STEPS = [
 ];
 
 const FEATURES = [
-  { icon: Gauge, color: "#3FD9EA", title: "Best execution", body: "Routes are ranked by net output after fees, not by whichever venue is easiest to integrate." },
-  { icon: ShieldCheck, color: "#A64CF0", title: "Non-custodial", body: "Your assets stay in your wallet until you sign. Each swap settles in one transaction, and Nodal never holds a balance between trades." },
-  { icon: Eye, color: "#FF8266", title: "Transparent routing", body: "Every quote shows its source, fee, and net output side by side — nothing hidden behind a single blended number." },
-  { icon: Globe2, color: "#3FD9EA", title: "Top-10 asset support (planned)", body: "Once a BlockDAG bridge is live, the ten most liquid assets in crypto can be traded as bridged tokens alongside BlockDAG's own." },
-  { icon: Network, color: "#A64CF0", title: "Built for chain 1404", body: "Not a generic multi-chain wrapper — routing logic is written specifically for BlockDAG's liquidity layout." },
-  { icon: SlidersHorizontal, color: "#FF8266", title: "Slippage controls", body: "Set your own tolerance before you sign. No trade executes outside the bounds you set." },
+  { icon: Gauge, color: "var(--n-cyan)", title: "Best execution", body: "Routes are ranked by net output after fees, not by whichever venue is easiest to integrate." },
+  { icon: ShieldCheck, color: "var(--n-purple)", title: "Non-custodial", body: "Your assets stay in your wallet until you sign. Each swap settles in one transaction, and Nodal never holds a balance between trades." },
+  { icon: Eye, color: "var(--n-coral)", title: "Transparent routing", body: "Every quote shows its source, fee, and net output side by side — nothing hidden behind a single blended number." },
+  { icon: Globe2, color: "var(--n-cyan)", title: "Top-10 asset support (planned)", body: "Once a BlockDAG bridge is live, the ten most liquid assets in crypto can be traded as bridged tokens alongside BlockDAG's own." },
+  { icon: Network, color: "var(--n-purple)", title: "Built for chain 1404", body: "Not a generic multi-chain wrapper — routing logic is written specifically for BlockDAG's liquidity layout." },
+  { icon: SlidersHorizontal, color: "var(--n-coral)", title: "Slippage controls", body: "Set your own tolerance before you sign. No trade executes outside the bounds you set." },
 ];
 
 const FAQS = [
@@ -399,7 +399,7 @@ const FAQS = [
   { q: "What does Nodal charge?", a: `Nodal adds a small routing fee — ${NODAL_FEE_LABEL} — on top of whatever fee the underlying DEX charges. It's broken out as its own line item before you confirm, never folded invisibly into the quoted rate.` },
   { q: "Which liquidity sources are live right now?", a: "One: Reef, an AMM DEX on chain 1404. Reef is built by the same team as Nodal — we say so up front because Nodal's job is to route you to the best price, and with a single source there is nothing to compare yet. More sources are added, with one on-chain transaction each, as other DEXs launch real liquidity." },
   { q: "Can I bridge assets in from other chains?", a: "There's no official BlockDAG bridge live yet. The Bridge tab models the lock-and-mint flow you'd expect once one launches — it's a preview of the UI, not a working transfer. Don't send funds expecting them to arrive until a real bridge contract exists and has been audited." },
-  { q: "Has this been audited?", a: (<>Not by an independent auditor yet. On 2 October 2026 NodalRouter and its Reef adapter had an AI-assisted security review: read line by line, run through Slither, tested with attacks, and matched to their published source on chain. It found no critical, high or medium issues in Nodal. <a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "#3FD9EA" }}>Read the review</a>. That review isn't an audit and can't rule out bugs, so treat Nodal as beta software until an independent audit is done.</>) },
+  { q: "Has this been audited?", a: (<>Not by an independent auditor yet. On 2 October 2026 NodalRouter and its Reef adapter had an AI-assisted security review: read line by line, run through Slither, tested with attacks, and matched to their published source on chain. It found no critical, high or medium issues in Nodal. <a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "var(--n-cyan)" }}>Read the review</a>. That review isn't an audit and can't rule out bugs, so treat Nodal as beta software until an independent audit is done.</>) },
   { q: "I found a bug or security issue. Where do I report it?", a: "Anything that could put funds at risk: email security@nodaldex.fyi privately, not in a public issue or chat, so it can be fixed (or the router paused) first. Everything else, like wrong numbers or confusing wording, can go to the team or into an issue on the project's GitHub." },
 ];
 
@@ -456,7 +456,7 @@ export default function NodalLanding() {
   const wallet = useWalletState();
   return (
     <WalletContext.Provider value={wallet}>
-      <div style={{ minHeight: "100%", background: "#0A0E17", fontFamily: "'Space Grotesk', sans-serif", color: "#F4F6FB" }}>
+      <div style={{ minHeight: "100%", background: "var(--n-bg)", fontFamily: "'Space Grotesk', sans-serif", color: "var(--n-ink)" }}>
         <GlobalStyle />
         {wallet.showTosGate && <TosGateModal />}
         <NavBar />
@@ -478,22 +478,23 @@ export default function NodalLanding() {
 function GlobalStyle() {
   return (
     <style>{`
+      :root{--n-bg:#0A0E17;--n-surface0:#0E1420;--n-surface:#121826;--n-raised:#171F30;--n-raised2:#17233A;--n-purpledeep:#241835;--n-line-strong:#2A3448;--n-border2:#3A4458;--n-faint:#5A6478;--n-dim2:#6B7488;--n-muted:#8B93A7;--n-soft:#C7CCD8;--n-warm:#C9B3AD;--n-ink:#F4F6FB;--n-white-ov:#FFFFFF;--n-black:#000000;--n-cyan:#3FD9EA;--n-coral:#FF8266;--n-purple:#A64CF0;--n-amber:#F2B84B;--n-red:#FF8A8A;--n-green-soft:#9FE8C9;--n-green:#1D8F76;--n-warmdeep:#2A1A18;color-scheme:dark} @media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--n-bg:#EEF2FA;--n-surface0:#F7F9FD;--n-surface:#FFFFFF;--n-raised:#F1F4FA;--n-raised2:#E6ECF7;--n-purpledeep:#F0E8FC;--n-line-strong:#CBD3E1;--n-border2:#B5BFD0;--n-faint:#7B8597;--n-dim2:#5D6779;--n-muted:#4A5468;--n-soft:#3A4356;--n-warm:#7A4A3A;--n-ink:#0C1424;--n-white-ov:#0C1424;--n-black:#1A2236;--n-cyan:#0A8FA3;--n-coral:#D2532F;--n-purple:#7A35E0;--n-amber:#A86F0A;--n-red:#C92F2F;--n-green-soft:#127A5E;--n-green:#1D8F76;--n-warmdeep:#F6E3DC;color-scheme:light}}
       @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
-      html, body { scroll-behavior: smooth; background: #0A0E17; margin: 0; padding: 0; min-height: 100%; }
+      html, body { scroll-behavior: smooth; background: var(--n-bg); margin: 0; padding: 0; min-height: 100%; }
       body { overflow-x: hidden; }
-      html { scrollbar-color: #2A3448 #0A0E17; scrollbar-width: thin; }
+      html { scrollbar-color: var(--n-line-strong) var(--n-bg); scrollbar-width: thin; }
       ::-webkit-scrollbar { width: 10px; height: 10px; }
-      ::-webkit-scrollbar-track { background: #0A0E17; }
-      ::-webkit-scrollbar-thumb { background: #2A3448; border-radius: 6px; }
-      ::-webkit-scrollbar-thumb:hover { background: #3A4458; }
+      ::-webkit-scrollbar-track { background: var(--n-bg); }
+      ::-webkit-scrollbar-thumb { background: var(--n-line-strong); border-radius: 6px; }
+      ::-webkit-scrollbar-thumb:hover { background: var(--n-border2); }
       .nodal-scope * { box-sizing: border-box; }
       .nodal-scope select { appearance: none; -webkit-appearance: none; }
-      .nodal-scope input::placeholder { color: #4B5468; }
+      .nodal-scope input::placeholder { color: var(--n-border2); }
       .nodal-scope input:focus,
       .nodal-scope select:focus,
       .nodal-scope button:focus-visible,
       .nodal-scope a:focus-visible {
-        outline: 2px solid #3FD9EA;
+        outline: 2px solid var(--n-cyan);
         outline-offset: 2px;
       }
       @keyframes nodal-spin { to { transform: rotate(360deg); } }
@@ -516,7 +517,7 @@ function BetaBanner() {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 24px 8px" }}>
-      <div style={{ border: "1px solid #FF826655", background: "#2A1A1866", borderRadius: 12, padding: "16px 18px" }}>
+      <div style={{ border: "1px solid color-mix(in srgb, var(--n-coral) 33%, transparent)", background: "color-mix(in srgb, var(--n-warmdeep) 40%, transparent)", borderRadius: 12, padding: "16px 18px" }}>
         <span
           style={{
             display: "inline-block",
@@ -524,8 +525,8 @@ function BetaBanner() {
             fontSize: 11,
             letterSpacing: "0.08em",
             fontWeight: 700,
-            color: "#FF8266",
-            border: "1px solid #FF826655",
+            color: "var(--n-coral)",
+            border: "1px solid color-mix(in srgb, var(--n-coral) 33%, transparent)",
             borderRadius: 6,
             padding: "3px 8px",
             marginBottom: 10,
@@ -533,20 +534,20 @@ function BetaBanner() {
         >
           BETA
         </span>
-        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "#C9B3AD" }}>
+        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "var(--n-warm)" }}>
           Experimental software on an early-stage chain. Source is published but not
           independently audited — start with small amounts.
         </p>
         <button
           onClick={() => setOpen(!open)}
-          style={{ background: "none", border: "none", padding: 0, marginTop: 8, color: "#3FD9EA", fontSize: 13, cursor: "pointer", textDecoration: "underline", fontFamily: "'Space Grotesk', sans-serif" }}
+          style={{ background: "none", border: "none", padding: 0, marginTop: 8, color: "var(--n-cyan)", fontSize: 13, cursor: "pointer", textDecoration: "underline", fontFamily: "'Space Grotesk', sans-serif" }}
         >
           {open ? "Show less" : "Read more"}
         </button>
         {open && (
-          <ul style={{ margin: "10px 0 0", padding: "0 0 0 18px", fontSize: 13, lineHeight: 1.6, color: "#C9B3AD" }}>
+          <ul style={{ margin: "10px 0 0", padding: "0 0 0 18px", fontSize: 13, lineHeight: 1.6, color: "var(--n-warm)" }}>
             <li>One live liquidity source today (Reef, built by the same team as Nodal). Trades are capped at 100 BDAG each during the beta.</li>
-            <li>AI-assisted security review completed 2 Oct 2026 (<a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "#3FD9EA" }}>read it</a>), but no independent audit yet.</li>
+            <li>AI-assisted security review completed 2 Oct 2026 (<a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "var(--n-cyan)" }}>read it</a>), but no independent audit yet.</li>
             <li>Admin controls (pause, fees, sources, caps) are held by a 2-of-2 hardware-wallet multisig, not a single key.</li>
             <li>The Bridge tab previews a lock-and-mint flow — no official BlockDAG bridge exists yet.</li>
           </ul>
@@ -564,7 +565,7 @@ function Section({ id, children, style }) {
   );
 }
 
-function Eyebrow({ children, color = "#3FD9EA" }) {
+function Eyebrow({ children, color = "var(--n-cyan)" }) {
   return (
     <p style={{ margin: "0 0 12px", fontFamily: "'Space Mono', monospace", fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color }}>
       {children}
@@ -582,7 +583,7 @@ function WalletButton() {
         {isWrongChain && (
           <button
             onClick={switchToBlockDAG}
-            style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: "#FF8266", border: "1px solid #FF826655", background: "#FF826612", borderRadius: 999, padding: "7px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
+            style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: "var(--n-coral)", border: "1px solid color-mix(in srgb, var(--n-coral) 33%, transparent)", background: "color-mix(in srgb, var(--n-coral) 7%, transparent)", borderRadius: 999, padding: "7px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
           >
             Switch to 1404
           </button>
@@ -594,16 +595,16 @@ function WalletButton() {
             setTimeout(() => setCopied(false), 1500);
           }}
           title="Copy address"
-          style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: "'Space Mono', monospace", fontSize: 13, color: "#F4F6FB", background: "#171F30", border: "1px solid #FFFFFF1A", borderRadius: 999, padding: "7px 12px", cursor: "pointer" }}
+          style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: "'Space Mono', monospace", fontSize: 13, color: "var(--n-ink)", background: "var(--n-raised)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)", borderRadius: 999, padding: "7px 12px", cursor: "pointer" }}
         >
-          <span style={{ width: 7, height: 7, borderRadius: "50%", background: isWrongChain ? "#FF8266" : "#3FD9EA" }} />
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: isWrongChain ? "var(--n-coral)" : "var(--n-cyan)" }} />
           {copied ? "Copied" : truncateAddress(address)}
-          <Copy size={12} color="#6B7488" />
+          <Copy size={12} color="var(--n-dim2)" />
         </button>
         <button
           onClick={disconnect}
           title="Disconnect"
-          style={{ fontSize: 12, color: "#6B7488", background: "transparent", border: "none", cursor: "pointer" }}
+          style={{ fontSize: 12, color: "var(--n-dim2)", background: "transparent", border: "none", cursor: "pointer" }}
         >
           Disconnect
         </button>
@@ -623,9 +624,9 @@ function WalletButton() {
           fontFamily: "'Space Grotesk', sans-serif",
           fontWeight: 700,
           fontSize: 14,
-          background: "#171F30",
-          border: "1px solid #FFFFFF1A",
-          color: "#F4F6FB",
+          background: "var(--n-raised)",
+          border: "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)",
+          color: "var(--n-ink)",
           padding: "9px 16px",
           borderRadius: 8,
           cursor: connecting ? "default" : "pointer",
@@ -633,10 +634,10 @@ function WalletButton() {
           whiteSpace: "nowrap",
         }}
       >
-        <Wallet size={15} color="#3FD9EA" />
+        <Wallet size={15} color="var(--n-cyan)" />
         {connecting ? "Connecting…" : "Connect wallet"}
       </button>
-      {error && <span style={{ fontSize: 11, color: "#FF8266", maxWidth: 220, textAlign: "right" }}>{error}</span>}
+      {error && <span style={{ fontSize: 11, color: "var(--n-coral)", maxWidth: 220, textAlign: "right" }}>{error}</span>}
     </div>
   );
 }
@@ -648,18 +649,19 @@ function NavBar() {
     { href: "#faq", label: "FAQ" },
   ];
   return (
-    <div className="nodal-scope" style={{ position: "sticky", top: 0, zIndex: 20, background: "#0A0E17CC", backdropFilter: "blur(10px)", borderBottom: "1px solid #FFFFFF10" }}>
+    <div className="nodal-scope" style={{ position: "sticky", top: 0, zIndex: 20, background: "color-mix(in srgb, var(--n-bg) 80%, transparent)", backdropFilter: "blur(10px)", borderBottom: "1px solid color-mix(in srgb, var(--n-white-ov) 6%, transparent)" }}>
       <div style={{ maxWidth: 960, margin: "0 auto", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Logo size={28} />
           <span style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 17 }}>nodal</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", justifyContent: "flex-end" }}>
           {links.map((l) => (
-            <a key={l.href} href={l.href} style={{ fontSize: 14, color: "#8B93A7", textDecoration: "none", display: "none" }} className="nav-link">
+            <a key={l.href} href={l.href} style={{ fontSize: 14, color: "var(--n-muted)", textDecoration: "none", display: "none" }} className="nav-link">
               {l.label}
             </a>
           ))}
+          <RpcBadge />
           <WalletButton />
         </div>
       </div>
@@ -671,23 +673,23 @@ function NavBar() {
 function Hero() {
   return (
     <div className="nodal-scope" style={{ position: "relative", overflow: "hidden" }}>
-      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 900px 500px at 15% 0%, #17233A 0%, transparent 60%), radial-gradient(ellipse 800px 500px at 100% 10%, #241835 0%, transparent 55%)", pointerEvents: "none" }} />
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 900px 500px at 15% 0%, var(--n-raised2) 0%, transparent 60%), radial-gradient(ellipse 800px 500px at 100% 10%, var(--n-purpledeep) 0%, transparent 55%)", pointerEvents: "none" }} />
       <Section style={{ position: "relative", padding: "88px 24px 56px", textAlign: "center" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "'Space Mono', monospace", fontSize: 12, color: "#3FD9EA", border: "1px solid #3FD9EA55", borderRadius: 999, padding: "5px 14px", background: "#3FD9EA0F", marginBottom: 22 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#3FD9EA" }} />
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "'Space Mono', monospace", fontSize: 12, color: "var(--n-cyan)", border: "1px solid color-mix(in srgb, var(--n-cyan) 33%, transparent)", borderRadius: 999, padding: "5px 14px", background: "color-mix(in srgb, var(--n-cyan) 6%, transparent)", marginBottom: 22 }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--n-cyan)" }} />
           on chain 1404
         </div>
         <h1 style={{ margin: "0 0 18px", fontSize: "clamp(32px, 5vw, 52px)", lineHeight: 1.12, fontWeight: 700, maxWidth: 720, marginInline: "auto" }}>
-          The routing layer for <span style={{ color: "#3FD9EA" }}>BlockDAG</span> DeFi.
+          The routing layer for <span style={{ color: "var(--n-cyan)" }}>BlockDAG</span> DeFi.
         </h1>
-        <p style={{ margin: "0 auto 32px", fontSize: 17, lineHeight: 1.6, color: "#8B93A7", maxWidth: 600 }}>
+        <p style={{ margin: "0 auto 32px", fontSize: 17, lineHeight: 1.6, color: "var(--n-muted)", maxWidth: 600 }}>
           Nodal quotes every liquidity source registered on chain 1404 and routes each trade to whichever one returns the most. Once a bridge goes live, it will let you bring in the top assets in crypto too — non-custodial, transparent, built for this chain.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="#app" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 15, background: "linear-gradient(90deg, #A64CF0, #FF8266)", color: "#0A0E17", padding: "13px 24px", borderRadius: 10, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
+          <a href="#app" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 15, background: "linear-gradient(90deg, var(--n-purple), var(--n-coral))", color: "var(--n-bg)", padding: "13px 24px", borderRadius: 10, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
             Launch app <ArrowRight size={16} />
           </a>
-          <a href="#how" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 15, border: "1px solid #FFFFFF22", color: "#F4F6FB", padding: "13px 24px", borderRadius: 10, textDecoration: "none" }}>
+          <a href="#how" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 15, border: "1px solid color-mix(in srgb, var(--n-white-ov) 13%, transparent)", color: "var(--n-ink)", padding: "13px 24px", borderRadius: 10, textDecoration: "none" }}>
             How it works
           </a>
         </div>
@@ -714,14 +716,14 @@ function StatsBar() {
     { label: "Keys per admin action", value: "2 of 2" },
   ];
   return (
-    <div className="nodal-scope" style={{ borderTop: "1px solid #FFFFFF10", borderBottom: "1px solid #FFFFFF10" }}>
+    <div className="nodal-scope" style={{ borderTop: "1px solid color-mix(in srgb, var(--n-white-ov) 6%, transparent)", borderBottom: "1px solid color-mix(in srgb, var(--n-white-ov) 6%, transparent)" }}>
       <div style={{ maxWidth: 960, margin: "0 auto", padding: "28px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 20, textAlign: "center" }}>
         {stats.map((s) => (
           <div key={s.label}>
-            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 22, fontWeight: 700, color: "#F4F6FB" }}>
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 22, fontWeight: 700, color: "var(--n-ink)" }}>
               {s.value}
             </div>
-            <div style={{ fontSize: 12, color: "#6B7488", marginTop: 4 }}>{s.label}</div>
+            <div style={{ fontSize: 12, color: "var(--n-dim2)", marginTop: 4 }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -735,15 +737,15 @@ function HowItWorks() {
       <div className="nodal-scope">
         <Eyebrow>How it works</Eyebrow>
         <h2 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 700 }}>From one input to the best route.</h2>
-        <p style={{ margin: "0 0 40px", fontSize: 15, color: "#8B93A7", maxWidth: 560 }}>
+        <p style={{ margin: "0 0 40px", fontSize: 15, color: "var(--n-muted)", maxWidth: 560 }}>
           Four steps happen between you entering an amount and a transaction landing on-chain — all of it visible, none of it hidden in a black box.
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20 }}>
           {STEPS.map((s) => (
-            <div key={s.n} style={{ border: "1px solid #FFFFFF14", borderRadius: 14, background: "#121826", padding: "20px 20px" }}>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: "#3FD9EA", marginBottom: 10 }}>{s.n}</div>
+            <div key={s.n} style={{ border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 14, background: "var(--n-surface)", padding: "20px 20px" }}>
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: "var(--n-cyan)", marginBottom: 10 }}>{s.n}</div>
               <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700 }}>{s.title}</h3>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "#8B93A7" }}>{s.body}</p>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "var(--n-muted)" }}>{s.body}</p>
             </div>
           ))}
         </div>
@@ -755,19 +757,19 @@ function HowItWorks() {
 function Features() {
   return (
     <Section>
-      <Eyebrow color="#A64CF0">Why Nodal</Eyebrow>
+      <Eyebrow color="var(--n-purple)">Why Nodal</Eyebrow>
       <h2 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 700 }}>Built to be trusted with a trade.</h2>
-      <p style={{ margin: "0 0 40px", fontSize: 15, color: "#8B93A7", maxWidth: 560 }}>
+      <p style={{ margin: "0 0 40px", fontSize: 15, color: "var(--n-muted)", maxWidth: 560 }}>
         Every design decision here optimizes for one thing: you keeping more of your own trade.
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
         {FEATURES.map((f) => (
-          <div key={f.title} style={{ border: "1px solid #FFFFFF14", borderRadius: 14, background: "#121826", padding: "20px 20px" }}>
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: `${f.color}1A`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+          <div key={f.title} style={{ border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 14, background: "var(--n-surface)", padding: "20px 20px" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: `color-mix(in srgb, ${f.color} 10%, transparent)`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
               <f.icon size={18} color={f.color} strokeWidth={1.75} />
             </div>
             <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 700 }}>{f.title}</h3>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "#8B93A7" }}>{f.body}</p>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "var(--n-muted)" }}>{f.body}</p>
           </div>
         ))}
       </div>
@@ -778,9 +780,9 @@ function Features() {
 function Sources() {
   return (
     <Section id="sources">
-      <Eyebrow color="#FF8266">Liquidity sources</Eyebrow>
+      <Eyebrow color="var(--n-coral)">Liquidity sources</Eyebrow>
       <h2 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 700 }}>What Nodal routes across today.</h2>
-      <p style={{ margin: "0 0 24px", fontSize: 15, color: "#8B93A7", maxWidth: 560 }}>
+      <p style={{ margin: "0 0 24px", fontSize: 15, color: "var(--n-muted)", maxWidth: 560 }}>
         Every source below is registered on-chain with NodalRouter and quoted live. New DEXs are
         added with a single transaction once they have real liquidity — no redeploy.
       </p>
@@ -789,20 +791,20 @@ function Sources() {
         {LIVE_SOURCES.map((src) => (
           <div
             key={src.name}
-            style={{ border: "1px solid #3FD9EA33", borderRadius: 12, background: "#121826", padding: "20px 22px" }}
+            style={{ border: "1px solid color-mix(in srgb, var(--n-cyan) 20%, transparent)", borderRadius: 12, background: "var(--n-surface)", padding: "20px 22px" }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 17, fontWeight: 700, color: "#F4F6FB" }}>{src.name}</span>
-              <span style={{ fontSize: 11, fontFamily: "'Space Mono', monospace", color: "#3FD9EA", border: "1px solid #3FD9EA55", borderRadius: 999, padding: "2px 9px" }}>
+              <span style={{ fontSize: 17, fontWeight: 700, color: "var(--n-ink)" }}>{src.name}</span>
+              <span style={{ fontSize: 11, fontFamily: "'Space Mono', monospace", color: "var(--n-cyan)", border: "1px solid color-mix(in srgb, var(--n-cyan) 33%, transparent)", borderRadius: 999, padding: "2px 9px" }}>
                 LIVE
               </span>
-              <span style={{ fontSize: 13, color: "#8B93A7" }}>{src.kind} · since {src.since}</span>
+              <span style={{ fontSize: 13, color: "var(--n-muted)" }}>{src.kind} · since {src.since}</span>
             </div>
-            <p style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.6, color: "#C9B3AD" }}>
+            <p style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.6, color: "var(--n-warm)" }}>
               Disclosure: Reef and Nodal are built by the same team. While Reef is the only source,
               Nodal routes through it rather than comparing venues.
             </p>
-            <div style={{ marginTop: 12, fontSize: 12, lineHeight: 1.8, color: "#6B7488", fontFamily: "'Space Mono', monospace", wordBreak: "break-all" }}>
+            <div style={{ marginTop: 12, fontSize: 12, lineHeight: 1.8, color: "var(--n-dim2)", fontFamily: "'Space Mono', monospace", wordBreak: "break-all" }}>
               <div>Nodal adapter: {src.adapter}</div>
               <div>Reef router: {src.router}</div>
               <div>NodalRouter: {NODAL_ROUTER_ADDRESS}</div>
@@ -812,12 +814,12 @@ function Sources() {
       </div>
 
       <div style={{ marginTop: 28 }}>
-        <p style={{ margin: "0 0 14px", fontSize: 13, color: "#6B7488", fontFamily: "'Space Mono', monospace", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+        <p style={{ margin: "0 0 14px", fontSize: 13, color: "var(--n-dim2)", fontFamily: "'Space Mono', monospace", textTransform: "uppercase", letterSpacing: "0.08em" }}>
           Bridgeable networks (planned)
         </p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {[...new Set(BRIDGED_TOKENS.map((t) => t.homeChain))].map((chain) => (
-            <span key={chain} style={{ fontSize: 13, color: "#8B93A7", border: "1px solid #FFFFFF14", borderRadius: 999, padding: "6px 12px", background: "#121826" }}>
+            <span key={chain} style={{ fontSize: 13, color: "var(--n-muted)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 999, padding: "6px 12px", background: "var(--n-surface)" }}>
               {chain}
             </span>
           ))}
@@ -837,12 +839,12 @@ function FAQ() {
         {FAQS.map((item, i) => {
           const open = openIndex === i;
           return (
-            <div key={item.q} style={{ border: "1px solid #FFFFFF14", borderRadius: 12, background: "#121826", overflow: "hidden" }}>
-              <button onClick={() => setOpenIndex(open ? -1 : i)} style={{ width: "100%", background: "transparent", border: "none", color: "#F4F6FB", padding: "16px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, textAlign: "left" }}>
+            <div key={item.q} style={{ border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 12, background: "var(--n-surface)", overflow: "hidden" }}>
+              <button onClick={() => setOpenIndex(open ? -1 : i)} style={{ width: "100%", background: "transparent", border: "none", color: "var(--n-ink)", padding: "16px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, textAlign: "left" }}>
                 {item.q}
-                <ChevronDown size={18} color="#8B93A7" style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease", flexShrink: 0 }} />
+                <ChevronDown size={18} color="var(--n-muted)" style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease", flexShrink: 0 }} />
               </button>
-              {open && <p style={{ margin: 0, padding: "0 18px 18px", fontSize: 14, lineHeight: 1.6, color: "#8B93A7" }}>{item.a}</p>}
+              {open && <p style={{ margin: 0, padding: "0 18px 18px", fontSize: 14, lineHeight: 1.6, color: "var(--n-muted)" }}>{item.a}</p>}
             </div>
           );
         })}
@@ -877,6 +879,25 @@ function RpcStatusPanel() {
   const [meta, setMeta] = useState(null); // { live, checkedAt, excluded }
   const [summary, setSummary] = useState(null); // { kind: "ok" | "warn" | "unknown", text }
   const [checking, setChecking] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  // Opened from the RPC status button in the nav bar; Esc or the backdrop closes it.
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("nodal-open-rpc", onOpen);
+    window.addEventListener("keydown", onKey);
+    return () => { window.removeEventListener("nodal-open-rpc", onOpen); window.removeEventListener("keydown", onKey); };
+  }, []);
+
+  // Tell the nav-bar button how the latest check went, so its dot can show it.
+  useEffect(() => {
+    const up = rows.filter((r) => r.state === "up").length;
+    const pending = rows.some((r) => r.state === "checking");
+    const state = summary?.kind === "warn" ? "warn" : up ? "up" : pending || !rows.length ? "checking" : "down";
+    window.__nodalRpcState = { state, up };
+    window.dispatchEvent(new CustomEvent("nodal-rpc-status", { detail: { state, up } }));
+  }, [rows, summary]);
 
   const checkAll = async (refresh = false) => {
     setChecking(true);
@@ -961,24 +982,32 @@ function RpcStatusPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const dotColor = { idle: "#5A6478", checking: "#A64CF0", up: "#3FD9EA", blocked: "#8B93A7", down: "#FF8266" };
-  const summaryColor = summary?.kind === "ok" ? "#3FD9EA" : summary?.kind === "warn" ? "#FF8266" : "#8B93A7";
+  const dotColor = { idle: "var(--n-faint)", checking: "var(--n-purple)", up: "var(--n-cyan)", blocked: "var(--n-muted)", down: "var(--n-coral)" };
+  const summaryColor = summary?.kind === "ok" ? "var(--n-cyan)" : summary?.kind === "warn" ? "var(--n-coral)" : "var(--n-muted)";
   const checkedLabel = meta?.checkedAt
     ? new Date(meta.checkedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : null;
 
+  if (!open) return null;
   return (
-    <Section id="rpc-status">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="RPC status"
+      onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
+      style={{ position: "fixed", inset: 0, zIndex: 60, background: "color-mix(in srgb, var(--n-black) 55%, transparent)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+    >
+    <div style={{ width: "min(640px, 100%)", maxHeight: "86vh", overflowY: "auto", background: "var(--n-surface)", border: "1px solid var(--n-line-strong)", borderRadius: 16, padding: "22px 24px", boxShadow: "0 30px 80px color-mix(in srgb, var(--n-black) 45%, transparent)" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 6 }}>
-        <Eyebrow color="#A64CF0">Infrastructure</Eyebrow>
+        <Eyebrow color="var(--n-purple)">Infrastructure</Eyebrow>
         <button
           onClick={() => checkAll(true)}
           disabled={checking}
           style={{
             fontSize: 12,
-            color: checking ? "#5A6478" : "#8B93A7",
+            color: checking ? "var(--n-faint)" : "var(--n-muted)",
             background: "transparent",
-            border: "1px solid #FFFFFF1A",
+            border: "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)",
             borderRadius: 8,
             padding: "6px 12px",
             cursor: checking ? "default" : "pointer",
@@ -988,9 +1017,9 @@ function RpcStatusPanel() {
         </button>
       </div>
       <h2 style={{ margin: "0 0 10px", fontSize: 26, fontWeight: 700 }}>RPC status</h2>
-      <p style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.6, color: "#8B93A7", maxWidth: "60ch" }}>
+      <p style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.6, color: "var(--n-muted)", maxWidth: "60ch" }}>
         The list of public endpoints comes from the community's{" "}
-        <a href="https://bdag.community/chain#nodes" target="_blank" rel="noopener noreferrer" style={{ color: "#8B93A7", textDecoration: "underline" }}>node board</a>,
+        <a href="https://bdag.community/chain#nodes" target="_blank" rel="noopener noreferrer" style={{ color: "var(--n-muted)", textDecoration: "underline" }}>node board</a>,
         so nodes that shut down drop off and new ones appear without a site update. Each one is then
         checked live from your own browser, which is the connection Nodal uses for quotes; it
         automatically falls back to the next healthy entry if one fails. It also cross-checks
@@ -998,7 +1027,7 @@ function RpcStatusPanel() {
         operators serving different chain histories. That tells you whether these RPCs agree with
         each other, not which side (if any) is correct.
       </p>
-      <p style={{ margin: "0 0 18px", fontSize: 12, lineHeight: 1.6, color: "#6B7488" }}>
+      <p style={{ margin: "0 0 18px", fontSize: 12, lineHeight: 1.6, color: "var(--n-dim2)" }}>
         {meta == null
           ? "Loading the endpoint list…"
           : meta.live
@@ -1025,9 +1054,9 @@ function RpcStatusPanel() {
               fontFamily: "'Space Mono', monospace",
               fontSize: 12,
               padding: "8px 10px",
-              border: "1px solid #FFFFFF14",
+              border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)",
               borderRadius: 6,
-              background: "#0E1420",
+              background: "var(--n-surface0)",
             }}
           >
             <span
@@ -1040,24 +1069,48 @@ function RpcStatusPanel() {
                 boxShadow: r.state === "up" ? `0 0 6px ${dotColor.up}` : "none",
               }}
             />
-            <span style={{ color: "#F4F6FB", flex: 1, wordBreak: "break-all" }}>{shortRpcLabel(r.url)}</span>
-            <span style={{ color: "#6B7488", fontSize: 11, textAlign: "right" }}>{r.latency || (r.state === "checking" ? "checking…" : "—")}</span>
+            <span style={{ color: "var(--n-ink)", flex: 1, wordBreak: "break-all" }}>{shortRpcLabel(r.url)}</span>
+            <span style={{ color: "var(--n-dim2)", fontSize: 11, textAlign: "right" }}>{r.latency || (r.state === "checking" ? "checking…" : "—")}</span>
           </div>
         ))}
       </div>
-    </Section>
+    </div>
+    </div>
+  );
+}
+
+function RpcBadge() {
+  const [st, setSt] = useState(() => (typeof window !== "undefined" && window.__nodalRpcState) || { state: "checking", up: 0 });
+  useEffect(() => {
+    const on = (e) => setSt(e.detail);
+    window.addEventListener("nodal-rpc-status", on);
+    return () => window.removeEventListener("nodal-rpc-status", on);
+  }, []);
+  const dot = { checking: "var(--n-faint)", up: "var(--n-cyan)", warn: "var(--n-amber)", down: "var(--n-coral)" }[st.state];
+  const title = st.state === "up" ? `${st.up} RPC${st.up === 1 ? "" : "s"} online` : st.state === "warn" ? "RPCs disagree on recent blocks: open for details" : st.state === "down" ? "No RPC reachable right now" : "Checking RPCs…";
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-haspopup="dialog"
+      onClick={() => window.dispatchEvent(new Event("nodal-open-rpc"))}
+      style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: "var(--n-muted)", padding: "6px 11px", borderRadius: 999, border: "1px solid color-mix(in srgb, var(--n-white-ov) 12%, transparent)", background: "transparent", cursor: "pointer", whiteSpace: "nowrap" }}
+    >
+      <span style={{ width: 8, height: 8, borderRadius: "50%", background: dot, boxShadow: st.state === "up" ? "0 0 6px var(--n-cyan)" : "none" }} />
+      RPC status
+    </button>
   );
 }
 
 function Footer() {
   return (
-    <div className="nodal-scope" style={{ borderTop: "1px solid #FFFFFF10" }}>
+    <div className="nodal-scope" style={{ borderTop: "1px solid color-mix(in srgb, var(--n-white-ov) 6%, transparent)" }}>
       <Section style={{ padding: "40px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Logo size={24} />
           <span style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14 }}>nodal</span>
         </div>
-        <p style={{ margin: 0, fontSize: 13, color: "#6B7488" }}>Built for BlockDAG · chain 1404 · not independently audited · <a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "#8B93A7" }}>security review</a> · security reports: <a href="mailto:security@nodaldex.fyi" style={{ color: "#8B93A7" }}>security@nodaldex.fyi</a> · <a href="/overview.pdf" target="_blank" rel="noopener" style={{ color: "#8B93A7" }}>overview brief (PDF)</a> · built by <a href="https://benjiprojects1404-services.pages.dev" target="_blank" rel="noopener" style={{ color: "#8B93A7" }}>benjiprojects1404</a></p>
+        <p style={{ margin: 0, fontSize: 13, color: "var(--n-dim2)" }}>Built for BlockDAG · chain 1404 · not independently audited · <a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "var(--n-muted)" }}>security review</a> · security reports: <a href="mailto:security@nodaldex.fyi" style={{ color: "var(--n-muted)" }}>security@nodaldex.fyi</a> · <a href="/overview.pdf" target="_blank" rel="noopener" style={{ color: "var(--n-muted)" }}>overview brief (PDF)</a> · built by <a href="https://benjiprojects1404-services.pages.dev" target="_blank" rel="noopener" style={{ color: "var(--n-muted)" }}>benjiprojects1404</a></p>
       </Section>
     </div>
   );
@@ -1073,11 +1126,11 @@ function ProductSection() {
     <Section id="app">
       <Eyebrow>Try it</Eyebrow>
       <h2 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 700 }}>Swap on BlockDAG, live.</h2>
-      <p style={{ margin: "0 0 28px", fontSize: 15, color: "#8B93A7", maxWidth: 560 }}>
+      <p style={{ margin: "0 0 28px", fontSize: 15, color: "var(--n-muted)", maxWidth: 560 }}>
         Quotes come straight from NodalRouter on chain 1404 and trades execute on-chain. Beta limits apply per trade. The Bridge tab is still a preview only, since no BlockDAG bridge exists yet.
       </p>
 
-      <div className="nodal-scope" style={{ display: "flex", gap: 6, marginBottom: 18, background: "#0E1420", border: "1px solid #FFFFFF14", borderRadius: 12, padding: 5, maxWidth: 480, boxSizing: "border-box" }}>
+      <div className="nodal-scope" style={{ display: "flex", gap: 6, marginBottom: 18, background: "var(--n-surface0)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 12, padding: 5, maxWidth: 480, boxSizing: "border-box" }}>
         {[{ id: "swap", label: "Swap" }, { id: "bridge", label: "Bridge" }].map((t) => (
           <button
             key={t.id}
@@ -1091,8 +1144,8 @@ function ProductSection() {
               fontFamily: "'Space Grotesk', sans-serif",
               fontWeight: 700,
               fontSize: 14,
-              background: tab === t.id ? "linear-gradient(90deg, #A64CF0, #FF8266)" : "transparent",
-              color: tab === t.id ? "#0A0E17" : "#8B93A7",
+              background: tab === t.id ? "linear-gradient(90deg, var(--n-purple), var(--n-coral))" : "transparent",
+              color: tab === t.id ? "var(--n-bg)" : "var(--n-muted)",
             }}
           >
             {t.label}
@@ -1132,17 +1185,17 @@ function BridgeTool() {
   const busy = stage === "locking" || stage === "minting";
 
   return (
-    <div className="nodal-scope nodal-panel" style={{ maxWidth: 480, background: "#121826", border: "1px solid #FFFFFF14", borderRadius: 16, padding: "24px 24px 22px", boxShadow: "0 30px 60px -30px #00000090" }}>
-      <div style={{ display: "flex", gap: 10, alignItems: "flex-start", border: "1px solid #FF826655", background: "#FF826612", borderRadius: 12, padding: "12px 14px", marginBottom: 20 }}>
-        <AlertTriangle size={16} color="#FF8266" style={{ flexShrink: 0, marginTop: 2 }} />
-        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: "#D8B8AA" }}>
+    <div className="nodal-scope nodal-panel" style={{ maxWidth: 480, background: "var(--n-surface)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 16, padding: "24px 24px 22px", boxShadow: "0 30px 60px -30px color-mix(in srgb, var(--n-black) 56%, transparent)" }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "flex-start", border: "1px solid color-mix(in srgb, var(--n-coral) 33%, transparent)", background: "color-mix(in srgb, var(--n-coral) 7%, transparent)", borderRadius: 12, padding: "12px 14px", marginBottom: 20 }}>
+        <AlertTriangle size={16} color="var(--n-coral)" style={{ flexShrink: 0, marginTop: 2 }} />
+        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: "var(--n-warm)" }}>
           No official BlockDAG bridge is live yet. This models the lock-and-mint flow for demonstration only — don't send real funds expecting them to arrive.
         </p>
       </div>
 
-      <div style={{ border: "1px solid #FFFFFF14", borderRadius: 12, background: "#0E1420", padding: "12px 14px" }}>
+      <div style={{ border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 12, background: "var(--n-surface0)", padding: "12px 14px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-          <span style={{ fontSize: 13, color: "#8B93A7" }}>Bridging from {selected.homeChain}</span>
+          <span style={{ fontSize: 13, color: "var(--n-muted)" }}>Bridging from {selected.homeChain}</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <input
@@ -1152,13 +1205,13 @@ function BridgeTool() {
             onChange={(e) => setAmount(e.target.value)}
             disabled={busy || stage === "done"}
             placeholder="0.00"
-            style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 19, background: "transparent", border: "none", color: "#F4F6FB", minWidth: 0 }}
+            style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 19, background: "transparent", border: "none", color: "var(--n-ink)", minWidth: 0 }}
           />
           <select
             value={asset}
             onChange={(e) => setAsset(e.target.value)}
             disabled={busy || stage === "done"}
-            style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14, background: "#171F30", border: "1px solid #FFFFFF1A", borderRadius: 999, padding: "7px 14px", color: "#3FD9EA", cursor: "pointer" }}
+            style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14, background: "var(--n-raised)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)", borderRadius: 999, padding: "7px 14px", color: "var(--n-cyan)", cursor: "pointer" }}
           >
             {BRIDGED_TOKENS.map((t) => (
               <option key={t.symbol} value={t.symbol}>{t.symbol}</option>
@@ -1168,26 +1221,26 @@ function BridgeTool() {
       </div>
 
       <div style={{ display: "flex", justifyContent: "center", margin: "8px 0" }}>
-        <div style={{ background: "#171F30", border: "1px solid #FFFFFF1A", borderRadius: "50%", width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", color: "#3FD9EA" }}>
+        <div style={{ background: "var(--n-raised)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)", borderRadius: "50%", width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--n-cyan)" }}>
           <ArrowDownUp size={16} strokeWidth={1.75} />
         </div>
       </div>
 
-      <div style={{ border: "1px solid #FFFFFF14", borderRadius: 12, background: "#0E1420", padding: "12px 14px" }}>
+      <div style={{ border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 12, background: "var(--n-surface0)", padding: "12px 14px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-          <span style={{ fontSize: 13, color: "#8B93A7" }}>Receiving on chain 1404</span>
+          <span style={{ fontSize: 13, color: "var(--n-muted)" }}>Receiving on chain 1404</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 19, color: "#F4F6FB" }}>
+          <span style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 19, color: "var(--n-ink)" }}>
             {formatAmount(received)}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14, background: "#171F30", border: "1px solid #FFFFFF1A", borderRadius: 999, padding: "7px 14px", color: "#3FD9EA" }}>
+          <span style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14, background: "var(--n-raised)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)", borderRadius: 999, padding: "7px 14px", color: "var(--n-cyan)" }}>
             {asset}
           </span>
         </div>
       </div>
 
-      <p style={{ margin: "10px 2px 0", fontSize: 12, color: "#6B7488" }}>Bridge fee {(feeRate * 100).toFixed(2)}% · destination BlockDAG, chain 1404</p>
+      <p style={{ margin: "10px 2px 0", fontSize: 12, color: "var(--n-dim2)" }}>Bridge fee {(feeRate * 100).toFixed(2)}% · destination BlockDAG, chain 1404</p>
 
       {stage !== "done" ? (
         <button
@@ -1199,8 +1252,8 @@ function BridgeTool() {
             padding: "13px 18px",
             borderRadius: 10,
             border: "none",
-            background: address && (!amt || amt <= 0) ? "#2A3245" : "linear-gradient(90deg, #A64CF0, #FF8266)",
-            color: address && (!amt || amt <= 0) ? "#6B7280" : "#0A0E17",
+            background: address && (!amt || amt <= 0) ? "var(--n-line-strong)" : "linear-gradient(90deg, var(--n-purple), var(--n-coral))",
+            color: address && (!amt || amt <= 0) ? "var(--n-dim2)" : "var(--n-bg)",
             fontFamily: "'Space Grotesk', sans-serif",
             fontWeight: 700,
             fontSize: 16,
@@ -1219,10 +1272,10 @@ function BridgeTool() {
         </button>
       ) : (
         <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ width: "100%", padding: "12px 18px", borderRadius: 10, border: "none", background: "#1D8F76", color: "#F4F6FB", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <div style={{ width: "100%", padding: "12px 18px", borderRadius: 10, border: "none", background: "var(--n-green)", color: "var(--n-ink)", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
             <Check size={17} /> Bridged — funds available on BlockDAG
           </div>
-          <button onClick={reset} style={{ width: "100%", padding: "10px 18px", borderRadius: 10, border: "1px solid #FFFFFF1A", background: "transparent", color: "#8B93A7", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
+          <button onClick={reset} style={{ width: "100%", padding: "10px 18px", borderRadius: 10, border: "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)", background: "transparent", color: "var(--n-muted)", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
             Bridge more
           </button>
         </div>
