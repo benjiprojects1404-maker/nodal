@@ -527,31 +527,31 @@ export default function LiveSwap({ wallet }) {
   const mainDisabled = !!address && !isWrongChain && (busy || !!blocker);
   const danger = impactLevel === "high" && !blocker;
 
-  const selectStyle = { fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14, background: "#171F30", border: "1px solid #FFFFFF1A", borderRadius: 999, padding: "7px 14px", color: "#3FD9EA", cursor: "pointer", maxWidth: 140 };
-  const boxStyle = { border: "1px solid #FFFFFF14", borderRadius: 12, background: "#0E1420", padding: "12px 14px" };
+  const selectStyle = { fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14, background: "var(--n-raised)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)", borderRadius: 999, padding: "7px 14px", color: "var(--n-cyan)", cursor: "pointer", maxWidth: 140 };
+  const boxStyle = { border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 12, background: "var(--n-surface0)", padding: "12px 14px" };
 
   return (
     <div className="nodal-swap-grid">
     <style>{`.nodal-swap-grid{display:grid;grid-template-columns:minmax(0,480px) minmax(0,1fr);gap:20px;align-items:stretch}.nodal-swap-grid>*{box-sizing:border-box}@media (max-width:900px){.nodal-swap-grid{grid-template-columns:minmax(0,1fr)}}`}</style>
-    <div className="nodal-scope nodal-panel" data-testid="live-swap" style={{ maxWidth: 480, width: "100%", display: "flex", flexDirection: "column", background: "#121826", border: "1px solid #FFFFFF14", borderRadius: 16, padding: "24px 24px 22px", boxShadow: "0 30px 60px -30px #00000090" }}>
+    <div className="nodal-scope nodal-panel" data-testid="live-swap" style={{ maxWidth: 480, width: "100%", display: "flex", flexDirection: "column", background: "var(--n-surface)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 16, padding: "24px 24px 22px", boxShadow: "0 30px 60px -30px color-mix(in srgb, var(--n-black) 56%, transparent)" }}>
       <style>{`@keyframes nodal-spin-k { to { transform: rotate(360deg); } } .nodal-spin { animation: nodal-spin-k 1s linear infinite; }`}</style>
 
       {status.paused && (
-        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", border: "1px solid #FF826655", background: "#FF826612", borderRadius: 12, padding: "10px 12px", marginBottom: 14 }}>
-          <AlertTriangle size={16} color="#FF8266" style={{ flexShrink: 0, marginTop: 2 }} />
-          <p style={{ margin: 0, fontSize: 13, color: "#D8B8AA" }}>Nodal is paused by its multisig. Trading is switched off until it's resumed.</p>
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", border: "1px solid color-mix(in srgb, var(--n-coral) 33%, transparent)", background: "color-mix(in srgb, var(--n-coral) 7%, transparent)", borderRadius: 12, padding: "10px 12px", marginBottom: 14 }}>
+          <AlertTriangle size={16} color="var(--n-coral)" style={{ flexShrink: 0, marginTop: 2 }} />
+          <p style={{ margin: 0, fontSize: 13, color: "var(--n-warm)" }}>Nodal is paused by its multisig. Trading is switched off until it's resumed.</p>
         </div>
       )}
 
       {/* You pay */}
       <div style={boxStyle}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-          <span style={{ fontSize: 13, color: "#8B93A7" }}>You pay</span>
+          <span style={{ fontSize: 13, color: "var(--n-muted)" }}>You pay</span>
           {balance !== null && (
             <button
               onClick={() => setAmount(formatUnits(balance, fromToken.decimals))}
               title="Use full balance"
-              style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: "'Space Mono', monospace", fontSize: 11, color: "#5A6478" }}
+              style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: "'Space Mono', monospace", fontSize: 11, color: "var(--n-faint)" }}
             >
               Balance: {fmtUnits(balance, fromToken.decimals)}
             </button>
@@ -571,7 +571,7 @@ export default function LiveSwap({ wallet }) {
               }
             }}
             placeholder="0.00"
-            style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 19, background: "transparent", border: "none", color: "#F4F6FB", minWidth: 0, outline: "none" }}
+            style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 19, background: "transparent", border: "none", color: "var(--n-ink)", minWidth: 0, outline: "none" }}
           />
           <select data-testid="token-in" value={fromKey} onChange={(e) => { setFromKey(e.target.value); setStage("idle"); }} style={selectStyle} aria-label="Token to pay">
             {tokens.map((t) => (
@@ -582,7 +582,7 @@ export default function LiveSwap({ wallet }) {
       </div>
 
       <div style={{ display: "flex", justifyContent: "center", margin: "8px 0" }}>
-        <button onClick={flip} aria-label="Reverse the direction of the trade" style={{ background: "#171F30", border: "1px solid #FFFFFF1A", borderRadius: "50%", width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#3FD9EA" }}>
+        <button onClick={flip} aria-label="Reverse the direction of the trade" style={{ background: "var(--n-raised)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)", borderRadius: "50%", width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--n-cyan)" }}>
           <ArrowDownUp size={16} strokeWidth={1.75} />
         </button>
       </div>
@@ -590,10 +590,10 @@ export default function LiveSwap({ wallet }) {
       {/* You receive */}
       <div style={boxStyle}>
         <div style={{ marginBottom: 6 }}>
-          <span style={{ fontSize: 13, color: "#8B93A7" }}>You receive (after Nodal's fee)</span>
+          <span style={{ fontSize: 13, color: "var(--n-muted)" }}>You receive (after Nodal's fee)</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span data-testid="amount-out" style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 19, color: quote ? "#F4F6FB" : "#5A6478", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <span data-testid="amount-out" style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 19, color: quote ? "var(--n-ink)" : "var(--n-faint)", overflow: "hidden", textOverflow: "ellipsis" }}>
             {quoting ? "…" : quote && toToken ? fmtUnits(quote.best.net, toToken.decimals) : "—"}
           </span>
           <select data-testid="token-out" value={toKey || ""} onChange={(e) => { setToKey(e.target.value); setStage("idle"); }} style={selectStyle} aria-label="Token to receive">
@@ -607,13 +607,13 @@ export default function LiveSwap({ wallet }) {
 
       {/* Slippage */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 13, color: "#8B93A7" }}>Max slippage</span>
+        <span style={{ fontSize: 13, color: "var(--n-muted)" }}>Max slippage</span>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           {SLIPPAGE_PRESETS.map((bp) => (
             <button
               key={bp}
               onClick={() => { setSlipBp(bp); setCustomSlip(""); }}
-              style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, padding: "5px 10px", borderRadius: 999, cursor: "pointer", border: slipBp === bp && !customSlip ? "1px solid #3FD9EA" : "1px solid #FFFFFF1A", background: slipBp === bp && !customSlip ? "#3FD9EA1A" : "#171F30", color: slipBp === bp && !customSlip ? "#3FD9EA" : "#8B93A7" }}
+              style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, padding: "5px 10px", borderRadius: 999, cursor: "pointer", border: slipBp === bp && !customSlip ? "1px solid var(--n-cyan)" : "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)", background: slipBp === bp && !customSlip ? "color-mix(in srgb, var(--n-cyan) 10%, transparent)" : "var(--n-raised)", color: slipBp === bp && !customSlip ? "var(--n-cyan)" : "var(--n-muted)" }}
             >
               {bp / 100}%
             </button>
@@ -629,33 +629,33 @@ export default function LiveSwap({ wallet }) {
               const n = parseFloat(v);
               if (isFinite(n) && n > 0 && n <= 50) setSlipBp(Math.round(n * 100));
             }}
-            style={{ width: 62, fontFamily: "'Space Mono', monospace", fontSize: 12, padding: "5px 8px", borderRadius: 999, border: customSlip ? "1px solid #3FD9EA" : "1px solid #FFFFFF1A", background: "#171F30", color: "#F4F6FB", outline: "none" }}
+            style={{ width: 62, fontFamily: "'Space Mono', monospace", fontSize: 12, padding: "5px 8px", borderRadius: 999, border: customSlip ? "1px solid var(--n-cyan)" : "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)", background: "var(--n-raised)", color: "var(--n-ink)", outline: "none" }}
           />
         </div>
       </div>
 
       {/* Breakdown */}
       {quote && toToken && (
-        <div data-testid="breakdown" style={{ marginTop: 14, border: "1px solid #FFFFFF14", borderRadius: 12, background: "#0E1420", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+        <div data-testid="breakdown" style={{ marginTop: 14, border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 12, background: "var(--n-surface0)", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
           <Row label="Route" value={`${quote.best.name}${quote.path.length > 2 ? " (via BDAG)" : ""}`} />
           <Row label={`${quote.best.name} output`} value={`${fmtUnits(quote.best.gross, toToken.decimals)} ${toToken.symbol}`} />
           <Row label={`Nodal fee (${(status.feeBps / 100).toFixed(2)}%)`} value={`− ${fmtUnits(quote.best.fee, toToken.decimals)} ${toToken.symbol}`} muted />
-          <div style={{ height: 1, background: "#FFFFFF14", margin: "2px 0" }} />
+          <div style={{ height: 1, background: "color-mix(in srgb, var(--n-white-ov) 8%, transparent)", margin: "2px 0" }} />
           <Row label="You receive" value={`${fmtUnits(quote.best.net, toToken.decimals)} ${toToken.symbol}`} bold />
           <Row label={`Minimum after ${slipBp / 100}% slippage`} value={`${fmtUnits(minNet, toToken.decimals)} ${toToken.symbol}`} />
           <Row
             label="Price impact"
             value={impact === null ? "n/a" : impact < 0.01 ? "< 0.01%" : `${impact.toFixed(2)}%`}
-            color={impactLevel === "ok" ? "#3FD9EA" : impactLevel === "warn" ? "#F2B84B" : "#FF6B6B"}
+            color={impactLevel === "ok" ? "var(--n-cyan)" : impactLevel === "warn" ? "var(--n-amber)" : "var(--n-red)"}
           />
           {quote.all.length > 1 && (
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "#6B7488" }}>Compared {quote.all.length} sources; showing the best net output.</p>
+            <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--n-dim2)" }}>Compared {quote.all.length} sources; showing the best net output.</p>
           )}
         </div>
       )}
 
       {(impactLevel === "warn" || impactLevel === "high") && !blocker && (
-        <p style={{ margin: "10px 0 0", fontSize: 12.5, color: impactLevel === "high" ? "#FF8A8A" : "#F2B84B", display: "flex", gap: 6 }}>
+        <p style={{ margin: "10px 0 0", fontSize: 12.5, color: impactLevel === "high" ? "var(--n-red)" : "var(--n-amber)", display: "flex", gap: 6 }}>
           <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: 2 }} />
           {impactLevel === "high"
             ? "High price impact: this trade moves the pool price a lot, so you'll get noticeably less. A smaller amount gets a better rate."
@@ -673,8 +673,8 @@ export default function LiveSwap({ wallet }) {
           padding: "13px 18px",
           borderRadius: 10,
           border: "none",
-          background: mainDisabled ? "#2A3245" : danger ? "linear-gradient(90deg, #E5484D, #FF8266)" : "linear-gradient(90deg, #A64CF0, #FF8266)",
-          color: mainDisabled ? "#8B93A7" : "#0A0E17",
+          background: mainDisabled ? "var(--n-line-strong)" : danger ? "linear-gradient(90deg, var(--n-red), var(--n-coral))" : "linear-gradient(90deg, var(--n-purple), var(--n-coral))",
+          color: mainDisabled ? "var(--n-muted)" : "var(--n-bg)",
           fontFamily: "'Space Grotesk', sans-serif",
           fontWeight: 700,
           fontSize: 15.5,
@@ -689,21 +689,21 @@ export default function LiveSwap({ wallet }) {
       </button>
 
       {txErr && (
-        <p data-testid="tx-error" style={{ margin: "12px 0 0", fontSize: 13, color: "#FF8A8A", lineHeight: 1.5 }}>{txErr}</p>
+        <p data-testid="tx-error" style={{ margin: "12px 0 0", fontSize: 13, color: "var(--n-red)", lineHeight: 1.5 }}>{txErr}</p>
       )}
       {lastTx && (
-        <div data-testid="tx-done" style={{ marginTop: 12, fontSize: 13, color: "#9FE8C9", display: "flex", gap: 8, alignItems: "flex-start", lineHeight: 1.5 }}>
+        <div data-testid="tx-done" style={{ marginTop: 12, fontSize: 13, color: "var(--n-green-soft)", display: "flex", gap: 8, alignItems: "flex-start", lineHeight: 1.5 }}>
           <Check size={16} style={{ flexShrink: 0, marginTop: 2 }} />
           <span>
             {lastTx.summary}.{" "}
-            <a href={`${CFG.explorer}/tx/${lastTx.hash}`} target="_blank" rel="noopener noreferrer" style={{ color: "#3FD9EA" }}>
+            <a href={`${CFG.explorer}/tx/${lastTx.hash}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--n-cyan)" }}>
               View transaction <ExternalLink size={11} style={{ verticalAlign: -1 }} />
             </a>
           </span>
         </div>
       )}
 
-      <p style={{ margin: "auto 0 0", paddingTop: 14, fontSize: 11.5, lineHeight: 1.55, color: "#5A6478" }}>
+      <p style={{ margin: "auto 0 0", paddingTop: 14, fontSize: 11.5, lineHeight: 1.55, color: "var(--n-faint)" }}>
         Trades go through NodalRouter ({short(CFG.router)}) in a single transaction: your tokens reach the DEX and the proceeds come straight back to your wallet, or the whole trade reverts. For ERC-20s you first approve exactly the amount you're swapping, never an unlimited allowance.
       </p>
     </div>
@@ -726,9 +726,9 @@ export default function LiveSwap({ wallet }) {
 const POOL_FEE_PCT = 0.3; // Reef: 0.30% per pool hop, already reflected in its quote
 
 function RouteDetails({ quote, quoting, fromToken, toToken, tokens, feeBps, capNow, recent }) {
-  const card = { background: "#121826", border: "1px solid #FFFFFF14", borderRadius: 16, padding: "20px 22px" };
-  const h = { margin: "0 0 10px", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: 0.4, color: "#8B93A7", textTransform: "uppercase" };
-  const note = { margin: "8px 0 0", fontSize: 12, lineHeight: 1.55, color: "#6B7488" };
+  const card = { background: "var(--n-surface)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 16, padding: "20px 22px" };
+  const h = { margin: "0 0 10px", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: 0.4, color: "var(--n-muted)", textTransform: "uppercase" };
+  const note = { margin: "8px 0 0", fontSize: 12, lineHeight: 1.55, color: "var(--n-dim2)" };
   const sym = (a) => {
     if (lc(a) === lc(CFG.wbdag)) return "BDAG";
     const t = tokens.find((x) => x.address && lc(x.address) === lc(a));
@@ -745,10 +745,10 @@ function RouteDetails({ quote, quoting, fromToken, toToken, tokens, feeBps, capN
           <>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {quote.all.map((q, i) => (
-                <div key={q.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, background: i === 0 ? "#3FD9EA12" : "#0E1420", border: i === 0 ? "1px solid #3FD9EA55" : "1px solid #FFFFFF10" }}>
-                  <span style={{ flex: 1, fontSize: 13, color: "#F4F6FB", fontWeight: 600 }}>{q.name}</span>
-                  {i === 0 && <span style={{ fontSize: 10.5, fontFamily: "'Space Mono', monospace", color: "#3FD9EA", border: "1px solid #3FD9EA55", borderRadius: 999, padding: "1px 7px" }}>BEST</span>}
-                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12.5, color: "#F4F6FB" }}>{fmtUnits(q.net, toToken.decimals)} {toToken.symbol}</span>
+                <div key={q.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, background: i === 0 ? "color-mix(in srgb, var(--n-cyan) 7%, transparent)" : "var(--n-surface0)", border: i === 0 ? "1px solid color-mix(in srgb, var(--n-cyan) 33%, transparent)" : "1px solid color-mix(in srgb, var(--n-white-ov) 6%, transparent)" }}>
+                  <span style={{ flex: 1, fontSize: 13, color: "var(--n-ink)", fontWeight: 600 }}>{q.name}</span>
+                  {i === 0 && <span style={{ fontSize: 10.5, fontFamily: "'Space Mono', monospace", color: "var(--n-cyan)", border: "1px solid color-mix(in srgb, var(--n-cyan) 33%, transparent)", borderRadius: 999, padding: "1px 7px" }}>BEST</span>}
+                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12.5, color: "var(--n-ink)" }}>{fmtUnits(q.net, toToken.decimals)} {toToken.symbol}</span>
                 </div>
               ))}
             </div>
@@ -770,11 +770,11 @@ function RouteDetails({ quote, quoting, fromToken, toToken, tokens, feeBps, capN
             <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
               {quote.path.map((a, i) => (
                 <React.Fragment key={a + i}>
-                  {i > 0 && <span style={{ color: "#5A6478" }}>→</span>}
-                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, fontWeight: 700, color: "#3FD9EA", background: "#171F30", border: "1px solid #FFFFFF1A", borderRadius: 999, padding: "4px 10px" }}>{sym(a)}</span>
+                  {i > 0 && <span style={{ color: "var(--n-faint)" }}>→</span>}
+                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, fontWeight: 700, color: "var(--n-cyan)", background: "var(--n-raised)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)", borderRadius: 999, padding: "4px 10px" }}>{sym(a)}</span>
                 </React.Fragment>
               ))}
-              <span style={{ fontSize: 12, color: "#6B7488", marginLeft: 4 }}>{hops === 1 ? "direct pool" : `via BDAG, ${hops} pools`}</span>
+              <span style={{ fontSize: 12, color: "var(--n-dim2)", marginLeft: 4 }}>{hops === 1 ? "direct pool" : `via BDAG, ${hops} pools`}</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
               <Row label={`${quote.best.name} pool fee (${POOL_FEE_PCT.toFixed(2)}%${hops > 1 ? ` × ${hops}` : ""})`} value="included in quote" />
@@ -788,7 +788,7 @@ function RouteDetails({ quote, quoting, fromToken, toToken, tokens, feeBps, capN
             <p style={{ ...note, marginTop: 2 }}>Pairs without a direct pool route through BDAG, which means two pools and two pool fees. Both fees are shown before you confirm.</p>
           </div>
         )}
-        <div style={{ height: 1, background: "#FFFFFF10", margin: "12px 0" }} />
+        <div style={{ height: 1, background: "color-mix(in srgb, var(--n-white-ov) 6%, transparent)", margin: "12px 0" }} />
         <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
         <Row
           label={`Beta limit per trade (${fromToken.symbol})`}
@@ -808,10 +808,10 @@ function RouteDetails({ quote, quoting, fromToken, toToken, tokens, feeBps, capN
         {recent.state === "ok" && recent.items.length > 0 && (
           <div data-testid="recent-trades" style={{ display: "flex", flexDirection: "column" }}>
             {recent.items.map((t, i) => (
-              <a key={t.hash + i} href={`${CFG.explorer}/tx/${t.hash}`} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderTop: i ? "1px solid #FFFFFF0D" : "none", textDecoration: "none" }}>
-                <span style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 12, color: "#F4F6FB", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.text}</span>
-                <span style={{ fontSize: 11.5, color: "#6B7488", whiteSpace: "nowrap" }}>via {t.source} · {timeAgo(t.time)}</span>
-                <ExternalLink size={12} color="#5A6478" style={{ flexShrink: 0 }} />
+              <a key={t.hash + i} href={`${CFG.explorer}/tx/${t.hash}`} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderTop: i ? "1px solid color-mix(in srgb, var(--n-white-ov) 5%, transparent)" : "none", textDecoration: "none" }}>
+                <span style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: 12, color: "var(--n-ink)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.text}</span>
+                <span style={{ fontSize: 11.5, color: "var(--n-dim2)", whiteSpace: "nowrap" }}>via {t.source} · {timeAgo(t.time)}</span>
+                <ExternalLink size={12} color="var(--n-faint)" style={{ flexShrink: 0 }} />
               </a>
             ))}
           </div>
@@ -824,8 +824,8 @@ function RouteDetails({ quote, quoting, fromToken, toToken, tokens, feeBps, capN
 function Row({ label, value, muted, bold, color }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-      <span style={{ fontSize: 13, color: muted ? "#6B7488" : "#8B93A7" }}>{label}</span>
-      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: bold ? 15 : 13, fontWeight: bold ? 700 : 400, color: color || (bold ? "#F4F6FB" : muted ? "#FF8266" : "#F4F6FB"), textAlign: "right" }}>
+      <span style={{ fontSize: 13, color: muted ? "var(--n-dim2)" : "var(--n-muted)" }}>{label}</span>
+      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: bold ? 15 : 13, fontWeight: bold ? 700 : 400, color: color || (bold ? "var(--n-ink)" : muted ? "var(--n-coral)" : "var(--n-ink)"), textAlign: "right" }}>
         {value}
       </span>
     </div>
