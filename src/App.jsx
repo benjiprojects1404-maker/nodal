@@ -559,7 +559,7 @@ function BetaBanner() {
 
 function Section({ id, children, style }) {
   return (
-    <section id={id} style={{ maxWidth: 960, margin: "0 auto", padding: "72px 24px", ...style }}>
+    <section id={id} style={{ maxWidth: 960, margin: "0 auto", padding: "clamp(36px, 6vw, 48px) 24px", ...style }}>
       {children}
     </section>
   );
@@ -674,7 +674,7 @@ function Hero() {
   return (
     <div className="nodal-scope" style={{ position: "relative", overflow: "hidden" }}>
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 900px 500px at 15% 0%, var(--n-raised2) 0%, transparent 60%), radial-gradient(ellipse 800px 500px at 100% 10%, var(--n-purpledeep) 0%, transparent 55%)", pointerEvents: "none" }} />
-      <Section style={{ position: "relative", padding: "88px 24px 56px", textAlign: "center" }}>
+      <Section style={{ position: "relative", padding: "88px 24px 48px", textAlign: "center" }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "'Space Mono', monospace", fontSize: 12, color: "var(--n-cyan)", border: "1px solid color-mix(in srgb, var(--n-cyan) 33%, transparent)", borderRadius: 999, padding: "5px 14px", background: "color-mix(in srgb, var(--n-cyan) 6%, transparent)", marginBottom: 22 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--n-cyan)" }} />
           on chain 1404
