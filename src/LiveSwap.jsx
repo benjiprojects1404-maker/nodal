@@ -27,7 +27,7 @@ const CFG = {
   // When a second DEX is registered, extend discovery to its factory too.
   factory: env.VITE_REEF_FACTORY || "0x9603042044b6B1A1637c508F731ba01219142239",
   wbdag: env.VITE_WBDAG || "0x62ba5c4F067989a7f6644488C875bEa69Bfa1FBA",
-  explorer: env.VITE_EXPLORER || "https://explorer.bdagexplorer.com",
+  explorer: env.VITE_EXPLORER || "https://explorer.blockdag.engineering",
 };
 
 const NATIVE = { symbol: "BDAG", name: "BlockDAG", decimals: 18, address: null, native: true };

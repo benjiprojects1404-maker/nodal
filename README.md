@@ -6,7 +6,7 @@ A DEX aggregator for BlockDAG (chain ID 1404). Nodal compares the liquidity sour
 
 - Website: https://nodaldex.fyi
 - Chain: BlockDAG, chain ID `1404` (`0x57c`)
-- Explorer: https://explorer.bdagexplorer.com (NodalRouter is verified there)
+- Explorer: https://explorer.blockdag.engineering (NodalRouter's verified source is on explorer.bdagexplorer.com, see below)
 
 ## Deployed contracts
 
