@@ -10,6 +10,9 @@
 const MAX_HEAD_DELTA = 30; // blocks behind the agreed head before we stop routing reads to it
 const HOST_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
 const PATH_RE = /^\/[A-Za-z0-9/_-]*$/;
+// Hosts whose responses carry no CORS headers for browser requests (seen failing in DevTools on
+// reefdex.fyi and handshakeotc.fyi, ~600 ms wasted per page load). They stay in the list but go last.
+const BROWSER_LAST = new Set(["rpc.blockdag.engineering"]);
 
 export function toRpcList(board) {
   if (!board || !Array.isArray(board.definitions) || !Array.isArray(board.nodes)) {
@@ -62,8 +65,10 @@ export function toRpcList(board) {
     });
   }
 
-  // Canonical endpoint first, then usable nodes by the board's latency, then the rest.
+  // Usable nodes that answer browsers first (canonical, then by the board's latency), then the rest.
+  const lateHost = (r) => BROWSER_LAST.has(new URL(r.url).hostname) ? 1 : 0;
   rpcs.sort((a, b) =>
+    (lateHost(a) - lateHost(b)) ||
     (b.canonical - a.canonical) ||
     (b.usable - a.usable) ||
     ((a.latencyMs ?? 1e9) - (b.latencyMs ?? 1e9))

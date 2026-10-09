@@ -6,7 +6,6 @@ export const RPC_REGISTRY_URL = "/api/rpcs";
 // Built-in list: used when the live list can't be loaded, and for the "add network" wallet prompt.
 // Last reviewed 1 Oct 2026 against bdag.community/chain#nodes.
 export const FALLBACK_RPCS = [
-  "https://rpc.blockdag.engineering",
   "https://rpc.capedag.com",
   "https://rms-bdag-rpc.de/api/rpc-live",
   "https://rpc.dvdmining.com",
@@ -16,6 +15,7 @@ export const FALLBACK_RPCS = [
   "https://rpc.escrowhubs.io",
   "https://rpc.brazil.bdag-us.org",
   "https://rpc.bdagexplorer.com",
+  "https://rpc.blockdag.engineering",
 ];
 
 let _pending = null;
