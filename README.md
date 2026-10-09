@@ -13,7 +13,7 @@ A DEX aggregator for BlockDAG (chain ID 1404). Nodal compares the liquidity sour
 | What | Address |
 |---|---|
 | NodalRouter | `0xA06f8a856896aA1836f04F758C1E5Ac5dbe24672` |
-| Owner: 2-of-2 multisig (Trezor + Ledger) | `0x4E2401bFD24c66166fABF9Cc5cD5B6B2c5c860fc` |
+| Owner: 2-of-3 multisig (Trezor + 2 Ledgers) | `0x4E2401bFD24c66166fABF9Cc5cD5B6B2c5c860fc` |
 | Treasury (fee recipient) | `0x8A8F4E1d70F889C5aA2579E8ff2826e4fE8B2127` |
 | NodalReefAdapter (registered as source `reef`) | `0x4b60D344eDA7E3D859739B5AbC1176d756E22d56` |
 
@@ -55,8 +55,10 @@ Pushes to `main` redeploy the site on Vercel.
 
 ## Admin actions (via the multisig)
 
-Since 30 Sep 2026 (block 22931119) NodalRouter is owned by `0x4E2401bF…60fc`, a 2-of-2 multisig whose owners are
-`0x306208Aa25A5BBAB22Bd9208c4178b9f2Dd929FD` (Trezor) and `0x33D599DD7C9e1C11b6DC4a48AE209D0f066CF91A` (Ledger).
+Since 30 Sep 2026 (block 22931119) NodalRouter is owned by `0x4E2401bF…60fc`, a multisig (2-of-3 since 9 Oct 2026, previously 2-of-2) whose owners are
+`0x306208Aa25A5BBAB22Bd9208c4178b9f2Dd929FD` (Trezor), `0x33D599DD7C9e1C11b6DC4a48AE209D0f066CF91A` (Ledger) and
+`0xA874Ff1255379E01F6596cDB0EE631891Fe27767` (second Ledger, added by multisig transaction 0, block 23977207).
+The pause/unpause path was drilled through the multisig on 9 Oct 2026 (transactions 1 and 2, blocks 23980687 and 23981053).
 It's the same `ReefAdminMultisig` contract that holds Reef's `feeToSetter`. Fees still go to the treasury wallet above.
 
 Every owner-only call takes three steps: **submit** (first signature), **confirm** (second signature), **execute** (anyone).
@@ -135,4 +137,4 @@ Please report security issues privately to **security@nodaldex.fyi**, not in pub
 
 ## Disclaimer
 
-Experimental software on an early-stage chain. The source is published and has been checked with Slither, but it has not had an independent third-party audit. Contract ownership is held by a 2-of-2 hardware-wallet multisig.
+Experimental software on an early-stage chain. The source is published and has been checked with Slither, but it has not had an independent third-party audit. Contract ownership is held by a 2-of-3 hardware-wallet multisig.

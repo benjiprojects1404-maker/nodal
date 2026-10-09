@@ -533,7 +533,7 @@ function BetaBanner() {
           <ul style={{ margin: "10px 0 0", padding: "0 0 0 18px", fontSize: 13, lineHeight: 1.6, color: "var(--n-warm)" }}>
             <li>One live liquidity source today (Reef, built by the same team as Nodal). Trades are capped at 100 BDAG each during the beta.</li>
             <li>AI-assisted security review completed 2 Oct 2026 (<a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "var(--n-cyan)" }}>read it</a>), but no independent audit yet.</li>
-            <li>Admin controls (pause, fees, sources, caps) are held by a 2-of-2 hardware-wallet multisig, not a single key.</li>
+            <li>Admin controls (pause, fees, sources, caps) are held by a 2-of-3 hardware-wallet multisig, not a single key.</li>
             <li>The Bridge tab previews a lock-and-mint flow — no official BlockDAG bridge exists yet.</li>
           </ul>
         )}
