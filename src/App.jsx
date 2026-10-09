@@ -658,7 +658,7 @@ function Hero() {
   return (
     <div className="nodal-scope" style={{ position: "relative", overflow: "hidden" }}>
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 900px 500px at 15% 0%, var(--n-raised2) 0%, transparent 60%), radial-gradient(ellipse 800px 500px at 100% 10%, var(--n-purpledeep) 0%, transparent 55%)", pointerEvents: "none" }} />
-      <Section style={{ position: "relative", padding: "72px 24px 36px", textAlign: "center" }}>
+      <Section style={{ position: "relative", padding: "48px 24px 24px", textAlign: "center" }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "'Space Mono', monospace", fontSize: 12, color: "var(--n-cyan)", border: "1px solid color-mix(in srgb, var(--n-cyan) 33%, transparent)", borderRadius: 999, padding: "5px 14px", background: "color-mix(in srgb, var(--n-cyan) 6%, transparent)", marginBottom: 22 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--n-cyan)" }} />
           on chain 1404
@@ -666,7 +666,7 @@ function Hero() {
         <h1 style={{ margin: "0 0 18px", fontSize: "clamp(32px, 5vw, 52px)", lineHeight: 1.12, fontWeight: 700, maxWidth: 720, marginInline: "auto" }}>
           The routing layer for <span style={{ color: "var(--n-cyan)" }}>BlockDAG</span> DeFi.
         </h1>
-        <p style={{ margin: "0 auto 8px", fontSize: 17, lineHeight: 1.6, color: "var(--n-muted)", maxWidth: 600 }}>
+        <p style={{ margin: "0 auto", fontSize: 17, lineHeight: 1.55, color: "var(--n-muted)", maxWidth: 800 }}>
           Nodal quotes every liquidity source registered on chain 1404 and routes each trade to whichever one returns the most. Once a bridge goes live, it will let you bring in the top assets in crypto too — non-custodial, transparent, built for this chain.
         </p>
       </Section>
@@ -693,7 +693,7 @@ function StatsBar() {
   ];
   return (
     <div className="nodal-scope" style={{ borderTop: "1px solid color-mix(in srgb, var(--n-white-ov) 6%, transparent)", borderBottom: "1px solid color-mix(in srgb, var(--n-white-ov) 6%, transparent)" }}>
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "28px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 20, textAlign: "center" }}>
+      <div style={{ maxWidth: 960, margin: "0 auto", padding: "16px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, textAlign: "center" }}>
         {stats.map((s) => (
           <div key={s.label}>
             <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 22, fontWeight: 700, color: "var(--n-ink)" }}>
@@ -713,7 +713,7 @@ function HowItWorks() {
       <div className="nodal-scope">
         <Eyebrow>How it works</Eyebrow>
         <h2 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 700 }}>From one input to the best route.</h2>
-        <p style={{ margin: "0 0 40px", fontSize: 15, color: "var(--n-muted)", maxWidth: 560 }}>
+        <p style={{ margin: "0 0 28px", fontSize: 15, color: "var(--n-muted)", maxWidth: 760 }}>
           Four steps happen between you entering an amount and a transaction landing on-chain — all of it visible, none of it hidden in a black box.
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20 }}>
