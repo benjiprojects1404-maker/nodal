@@ -1088,7 +1088,7 @@ function Footer() {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Logo size={22} />
         </div>
-        <p style={{ margin: 0, fontSize: 13, color: "var(--n-dim2)" }}>Built for BlockDAG · chain 1404 · not independently audited · <a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "var(--n-muted)" }}>security review</a> · security reports: <a href="mailto:security@nodaldex.fyi" style={{ color: "var(--n-muted)" }}>security@nodaldex.fyi</a> · <a href="/overview.pdf" target="_blank" rel="noopener" style={{ color: "var(--n-muted)" }}>overview brief (PDF)</a> · built by <a href="https://benjiprojects1404-services.pages.dev" target="_blank" rel="noopener" style={{ color: "var(--n-muted)" }}>benjiprojects1404</a></p>
+        <p style={{ margin: 0, fontSize: 13, color: "var(--n-dim2)" }}>Built for BlockDAG · chain 1404 · not independently audited · <a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "var(--n-muted)" }}>security review</a> · security reports: <a href="mailto:security@nodaldex.fyi" style={{ color: "var(--n-muted)" }}>security@nodaldex.fyi</a> · <a href="/overview.pdf" target="_blank" rel="noopener" style={{ color: "var(--n-muted)" }}>overview brief (PDF)</a> · <a href="/rpcs" style={{ color: "var(--n-muted)" }}>public RPC list</a> · built by <a href="https://benjiprojects1404-services.pages.dev" target="_blank" rel="noopener" style={{ color: "var(--n-muted)" }}>benjiprojects1404</a></p>
       </Section>
     </div>
   );
