@@ -460,7 +460,7 @@ export default function NodalLanding() {
 function GlobalStyle() {
   return (
     <style>{`
-      :root{--n-bg:#050f14;--n-surface0:#0a181d;--n-surface:#0e1f24;--n-raised:#12262c;--n-raised2:#163038;--n-purpledeep:#2a2118;--n-line-strong:#26414a;--n-border2:#34535c;--n-faint:#5f858d;--n-dim2:#7fa3ab;--n-muted:#8fb3ba;--n-soft:#c4dade;--n-warm:#d8c3a8;--n-ink:#e7f3f5;--n-white-ov:#FFFFFF;--n-black:#000000;--n-cyan:#c5966c;--n-coral:#c9733f;--n-purple:#e0a85f;--n-amber:#F2B84B;--n-red:#FF8A8A;--n-green-soft:#9FE8C9;--n-green:#1D8F76;--n-warmdeep:#2A1A18;color-scheme:dark} @media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--n-bg:#e6f4f6;--n-surface0:#f5fcfd;--n-surface:#f5fcfd;--n-raised:#eaf6f8;--n-raised2:#dcedf0;--n-purpledeep:#f3e7d3;--n-line-strong:#bcd3d8;--n-border2:#a4c0c6;--n-faint:#6a8a91;--n-dim2:#3f5e65;--n-muted:#33525a;--n-soft:#25434a;--n-warm:#7A4A3A;--n-ink:#0b1f24;--n-white-ov:#0b1f24;--n-black:#1A2236;--n-cyan:#8a5a22;--n-coral:#b4551f;--n-purple:#a8681c;--n-amber:#A86F0A;--n-red:#C92F2F;--n-green-soft:#127A5E;--n-green:#1D8F76;--n-warmdeep:#F6E3DC;color-scheme:light}}
+      :root{--n-bg:#050f14;--n-surface0:#0a181d;--n-surface:#0e1f24;--n-raised:#12262c;--n-raised2:#163038;--n-purpledeep:#2a2118;--n-line-strong:#26414a;--n-border2:#34535c;--n-faint:#5f858d;--n-dim2:#7fa3ab;--n-muted:#8fb3ba;--n-soft:#c4dade;--n-warm:#d8c3a8;--n-ink:#e7f3f5;--n-white-ov:#FFFFFF;--n-black:#000000;--n-cyan:#c5966c;--n-coral:#c9733f;--n-purple:#e0a85f;--n-amber:#F2B84B;--n-red:#FF8A8A;--n-green-soft:#9FE8C9;--n-green:#1D8F76;--n-warmdeep:#2A1A18;--n-dot-ok:#3fbf83;--n-dot-warn:#F2B84B;--n-dot-bad:#ff6b6b;color-scheme:dark} @media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--n-bg:#e6f4f6;--n-surface0:#f5fcfd;--n-surface:#f5fcfd;--n-raised:#eaf6f8;--n-raised2:#dcedf0;--n-purpledeep:#f3e7d3;--n-line-strong:#bcd3d8;--n-border2:#a4c0c6;--n-faint:#6a8a91;--n-dim2:#3f5e65;--n-muted:#33525a;--n-soft:#25434a;--n-warm:#7A4A3A;--n-ink:#0b1f24;--n-white-ov:#0b1f24;--n-black:#1A2236;--n-cyan:#8a5a22;--n-coral:#b4551f;--n-purple:#a8681c;--n-amber:#A86F0A;--n-red:#C92F2F;--n-green-soft:#127A5E;--n-green:#1D8F76;--n-warmdeep:#F6E3DC;--n-dot-ok:#1a9b5f;--n-dot-warn:#c98a0a;--n-dot-bad:#c92f2f;color-scheme:light}}
       .nodal-scope h1,.nodal-scope h2{font-family:'Bricolage Grotesque','Instrument Sans',sans-serif;font-weight:800;letter-spacing:-0.01em}
       .n-wordmark{font-family:'Bricolage Grotesque','Instrument Sans',sans-serif;font-weight:800;letter-spacing:-0.02em;line-height:1;color:var(--n-ink);display:inline-block}
       .n-o{position:relative;display:inline-block}
@@ -958,7 +958,7 @@ function RpcStatusPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const dotColor = { idle: "var(--n-faint)", checking: "var(--n-purple)", up: "var(--n-cyan)", blocked: "var(--n-muted)", down: "var(--n-coral)" };
+  const dotColor = { idle: "var(--n-faint)", checking: "var(--n-faint)", up: "var(--n-dot-ok)", blocked: "var(--n-dot-warn)", down: "var(--n-dot-bad)" };
   const summaryColor = summary?.kind === "ok" ? "var(--n-cyan)" : summary?.kind === "warn" ? "var(--n-coral)" : "var(--n-muted)";
   const checkedLabel = meta?.checkedAt
     ? new Date(meta.checkedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
@@ -1062,7 +1062,7 @@ function RpcBadge() {
     window.addEventListener("nodal-rpc-status", on);
     return () => window.removeEventListener("nodal-rpc-status", on);
   }, []);
-  const dot = { checking: "var(--n-faint)", up: "var(--n-cyan)", warn: "var(--n-amber)", down: "var(--n-coral)" }[st.state];
+  const dot = { checking: "var(--n-faint)", up: "var(--n-dot-ok)", warn: "var(--n-dot-warn)", down: "var(--n-dot-bad)" }[st.state];
   const title = st.state === "up" ? `${st.up} RPC${st.up === 1 ? "" : "s"} online` : st.state === "warn" ? "RPCs disagree on recent blocks: open for details" : st.state === "down" ? "No RPC reachable right now" : "Checking RPCs…";
   return (
     <button
@@ -1072,7 +1072,7 @@ function RpcBadge() {
       onClick={() => window.dispatchEvent(new Event("nodal-open-rpc"))}
       style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "'Instrument Sans', sans-serif", fontSize: 12, color: "var(--n-muted)", padding: "6px 11px", borderRadius: 999, border: "1px solid color-mix(in srgb, var(--n-white-ov) 12%, transparent)", background: "transparent", cursor: "pointer", whiteSpace: "nowrap" }}
     >
-      <span style={{ width: 8, height: 8, borderRadius: "50%", background: dot, boxShadow: st.state === "up" ? "0 0 6px var(--n-cyan)" : "none" }} />
+      <span style={{ width: 8, height: 8, borderRadius: "50%", background: dot, boxShadow: st.state === "up" ? "0 0 6px var(--n-dot-ok)" : "none" }} />
       RPC status
     </button>
   );
