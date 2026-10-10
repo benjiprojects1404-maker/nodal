@@ -25,7 +25,10 @@ const BLOCKDAG_CHAIN_ID_DEC = 1404;
 const BLOCKDAG_CHAIN_ID_HEX = "0x57c";
 // Wallet "add network" prompt uses the built-in list; reads and the RPC status panel use the
 // live list from /api/rpcs (see src/rpcRegistry.js), which follows bdag.community's node board.
-const BLOCKDAG_RPCS = FALLBACK_RPCS;
+// The listed endpoint (chainid.network, Ethereum Lists, viem) goes first so the wallet's default RPC
+// matches the published chain data; the rest follow in the built-in order.
+const LISTED_RPC = "https://rpc.bdagexplorer.com";
+const BLOCKDAG_RPCS = [LISTED_RPC, ...FALLBACK_RPCS.filter((u) => u !== LISTED_RPC)];
 const BLOCKDAG_EXPLORER = "https://explorer.blockdag.engineering/";
 
 const WalletContext = createContext(null);
@@ -136,7 +139,7 @@ function useWalletState() {
             params: [
               {
                 chainId: BLOCKDAG_CHAIN_ID_HEX,
-                chainName: "BlockDAG Mainnet",
+                chainName: "BlockDAG",
                 nativeCurrency: { name: "BlockDAG", symbol: "BDAG", decimals: 18 },
                 rpcUrls: BLOCKDAG_RPCS,
                 blockExplorerUrls: [BLOCKDAG_EXPLORER],
