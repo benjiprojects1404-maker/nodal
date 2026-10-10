@@ -962,7 +962,7 @@ function RpcStatusPanel() {
   }, []);
 
   const dotColor = { idle: "var(--n-faint)", checking: "var(--n-faint)", up: "var(--n-dot-ok)", blocked: "var(--n-dot-warn)", down: "var(--n-dot-bad)" };
-  const summaryColor = summary?.kind === "ok" ? "var(--n-cyan)" : summary?.kind === "warn" ? "var(--n-coral)" : "var(--n-muted)";
+  const summaryColor = summary?.kind === "ok" ? "var(--n-dot-ok)" : summary?.kind === "warn" ? "var(--n-dot-warn)" : "var(--n-muted)";
   const checkedLabel = meta?.checkedAt
     ? new Date(meta.checkedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : null;
