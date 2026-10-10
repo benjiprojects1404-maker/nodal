@@ -242,6 +242,8 @@ export default function LiveSwap({ wallet }) {
   const [quote, setQuote] = useState(null); // { path, amountIn, best, all, impactPct, cap }
   const [quoting, setQuoting] = useState(false);
   const [quoteErr, setQuoteErr] = useState("");
+  const [refreshTick, setRefreshTick] = useState(0); // bump to re-quote with the same inputs
+  const [nowMs, setNowMs] = useState(() => Date.now()); // ticks once a second while a quote is shown
 
   const [stage, setStage] = useState("idle"); // idle | approving | swapping | done
   const [txErr, setTxErr] = useState("");
@@ -345,6 +347,7 @@ export default function LiveSwap({ wallet }) {
     const my = ++quoteSeq.current;
     const t = setTimeout(async () => {
       setQuoting(true);
+      const quoteStarted = Date.now();
       try {
         const ro = await readProvider();
         const router = new Contract(CFG.router, ROUTER_ABI, ro);
@@ -400,7 +403,7 @@ export default function LiveSwap({ wallet }) {
         }
         if (my !== quoteSeq.current) return;
         setStatus((s) => ({ ...s, paused }));
-        setQuote({ path, amountIn, best, all, impactPct, cap });
+        setQuote({ path, amountIn, best, all, impactPct, cap, quotedAt: Date.now(), tookMs: Date.now() - quoteStarted });
       } catch (e) {
         if (my === quoteSeq.current) setQuoteErr(friendlyError(e));
         resetReadProvider();
@@ -410,7 +413,15 @@ export default function LiveSwap({ wallet }) {
     }, 400);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fromKey, toKey, amount, tokens]);
+  }, [fromKey, toKey, amount, tokens, refreshTick]);
+
+  // Keep the "quote is N s old" line current while a quote is on screen.
+  useEffect(() => {
+    if (!quote) return undefined;
+    setNowMs(Date.now());
+    const id = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [quote]);
 
   const flip = () => {
     if (!toToken) return;
@@ -648,9 +659,8 @@ export default function LiveSwap({ wallet }) {
             value={impact === null ? "n/a" : impact < 0.01 ? "< 0.01%" : `${impact.toFixed(2)}%`}
             color={impactLevel === "ok" ? "var(--n-cyan)" : impactLevel === "warn" ? "var(--n-amber)" : "var(--n-red)"}
           />
-          {quote.all.length > 1 && (
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--n-dim2)" }}>Compared {quote.all.length} sources; showing the best net output.</p>
-          )}
+          <SourceComparison quote={quote} toToken={toToken} />
+          <QuoteAge quote={quote} nowMs={nowMs} onRefresh={() => setRefreshTick((n) => n + 1)} />
         </div>
       )}
 
@@ -817,6 +827,70 @@ function RouteDetails({ quote, quoting, fromToken, toToken, tokens, feeBps, capN
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// Every source that could fill the trade, best first, with how far each one trails the best (after fees).
+export function SourceComparison({ quote, toToken }) {
+  const { all, best } = quote;
+  if (all.length < 2) {
+    return (
+      <p data-testid="source-compare" style={{ margin: "4px 0 0", fontSize: 12, color: "var(--n-dim2)" }}>
+        Only {best.name} could fill this trade right now, so there was nothing to compare.
+      </p>
+    );
+  }
+  return (
+    <div data-testid="source-compare" style={{ marginTop: 6, paddingTop: 10, borderTop: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", display: "flex", flexDirection: "column", gap: 6 }}>
+      <span style={{ fontSize: 12, color: "var(--n-dim2)" }}>Compared {all.length} sources, net of fees, best first</span>
+      {all.map((s, i) => {
+        const trailBp = best.net > 0n ? Number(((best.net - s.net) * 10000n) / best.net) : 0;
+        return (
+          <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, fontSize: 12.5 }}>
+            <span style={{ color: i === 0 ? "var(--n-ink)" : "var(--n-muted)", display: "flex", alignItems: "center", gap: 6 }}>
+              {s.name}
+              {i === 0 && <span style={{ fontSize: 10.5, letterSpacing: 0.4, padding: "1px 6px", borderRadius: 999, border: "1px solid var(--n-dot-ok)", color: "var(--n-dot-ok)" }}>BEST</span>}
+            </span>
+            <span style={{ fontFamily: "'Space Mono', monospace", color: i === 0 ? "var(--n-ink)" : "var(--n-muted)", textAlign: "right" }}>
+              {fmtUnits(s.net, toToken.decimals)} {toToken.symbol}
+              {i > 0 && <span style={{ color: "var(--n-dim2)" }}> (−{(trailBp / 100).toFixed(2)}%)</span>}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// How old the quote is, and a Refresh button. Quotes only update when the inputs change, so say so
+// plainly once one gets old; the minimum-received setting still protects the trade either way.
+const STALE_AFTER_S = 30;
+const SLOW_QUOTE_MS = 4000;
+export function QuoteAge({ quote, nowMs, onRefresh }) {
+  const ageS = Math.max(0, Math.round((nowMs - quote.quotedAt) / 1000));
+  const stale = ageS >= STALE_AFTER_S;
+  const slow = quote.tookMs >= SLOW_QUOTE_MS;
+  const color = stale ? "var(--n-dot-warn)" : "var(--n-dim2)";
+  return (
+    <div data-testid="quote-age" style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 2 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, fontSize: 12, color }}>
+        <span>
+          {stale ? `This quote is ${ageS} s old. Refresh it before you confirm.` : ageS < 2 ? "Quote just updated" : `Quote taken ${ageS} s ago`}
+        </span>
+        <button
+          type="button"
+          onClick={onRefresh}
+          style={{ fontSize: 12, padding: "3px 10px", borderRadius: 999, border: `1px solid ${stale ? "var(--n-dot-warn)" : "color-mix(in srgb, var(--n-white-ov) 14%, transparent)"}`, background: "transparent", color: stale ? "var(--n-dot-warn)" : "var(--n-muted)", cursor: "pointer" }}
+        >
+          Refresh
+        </button>
+      </div>
+      {slow && (
+        <span style={{ fontSize: 12, color: "var(--n-dot-warn)" }}>
+          The network was slow answering this quote ({(quote.tookMs / 1000).toFixed(1)} s), so the price may already have moved.
+        </span>
+      )}
     </div>
   );
 }
