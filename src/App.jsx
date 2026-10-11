@@ -1089,6 +1089,7 @@ function Footer() {
           <Logo size={22} />
         </div>
         <p style={{ margin: 0, fontSize: 13, color: "var(--n-dim2)" }}>Built for BlockDAG · chain 1404 · not independently audited · <a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "var(--n-muted)" }}>security review</a> · security reports: <a href="mailto:security@nodaldex.fyi" style={{ color: "var(--n-muted)" }}>security@nodaldex.fyi</a> · <a href="/overview.pdf" target="_blank" rel="noopener" style={{ color: "var(--n-muted)" }}>overview brief (PDF)</a> · <a href="/rpcs" style={{ color: "var(--n-muted)" }}>public RPC list</a> · built by <a href="https://benjiprojects1404-services.pages.dev" target="_blank" rel="noopener" style={{ color: "var(--n-muted)" }}>benjiprojects1404</a></p>
+        <p style={{ margin: 0, flexBasis: "100%", fontSize: 12.5, color: "var(--n-dim2)" }}>Chain ID 1404 appears in public chain lists such as chainid.network and viem. Two separate networks use this ID, so check which RPC your wallet is on before you sign.</p>
       </Section>
     </div>
   );
