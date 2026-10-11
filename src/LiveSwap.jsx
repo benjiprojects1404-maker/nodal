@@ -90,6 +90,40 @@ function resetReadProvider() {
 const lc = (a) => (a ? a.toLowerCase() : a);
 const wrapped = (t) => (t.native ? CFG.wbdag : t.address);
 const tokenKey = (t) => (t.native ? "native" : lc(t.address));
+
+// ---- Shareable quote links -------------------------------------------------
+// A link like /?from=BDAG&to=COOKED&amount=25 opens the swap with the pair and amount filled in.
+// It only fills the form: nothing is quoted-and-signed on its own, and the user still confirms in their wallet.
+const AMOUNT_RE = /^\d{1,18}(\.\d{1,18})?$/;
+export function parseShareParams(search) {
+  try {
+    const q = new URLSearchParams(search || "");
+    const from = (q.get("from") || "").trim().slice(0, 64);
+    const to = (q.get("to") || "").trim().slice(0, 64);
+    const rawAmount = (q.get("amount") || "").trim();
+    return { from, to, amount: AMOUNT_RE.test(rawAmount) ? rawAmount : "", present: Boolean(from || to || rawAmount) };
+  } catch {
+    return { from: "", to: "", amount: "", present: false };
+  }
+}
+// ref is a symbol ("BDAG", "COOKED") or an address; matching ignores case. "native" means BDAG.
+export function resolveToken(tokens, ref) {
+  if (!ref) return null;
+  const r = ref.toLowerCase();
+  if (r === "native") return tokens.find((t) => t.native) || null;
+  const byAddr = tokens.find((t) => t.address && t.address.toLowerCase() === r);
+  if (byAddr) return byAddr;
+  const bySym = tokens.filter((t) => (t.symbol || "").toLowerCase() === r);
+  return bySym.length === 1 ? bySym[0] : null; // an ambiguous symbol must be given as an address
+}
+export function buildShareUrl(base, tokens, fromToken, toToken, amount) {
+  const ref = (t) => (t.native ? "BDAG" : tokens.filter((x) => (x.symbol || "").toLowerCase() === (t.symbol || "").toLowerCase()).length === 1 ? t.symbol : t.address);
+  const q = new URLSearchParams();
+  q.set("from", ref(fromToken));
+  q.set("to", ref(toToken));
+  if (amount && AMOUNT_RE.test(String(amount))) q.set("amount", String(amount));
+  return `${base}?${q.toString()}`;
+}
 const short = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "");
 
 function fmtUnits(v, decimals, maxFrac) {
@@ -231,9 +265,11 @@ export default function LiveSwap({ wallet }) {
 
   const [tokens, setTokens] = useState([{ ...NATIVE }]);
   const [loadErr, setLoadErr] = useState("");
+  const initialShare = useRef(parseShareParams(typeof window !== "undefined" ? window.location.search : ""));
+  const [shareNote, setShareNote] = useState("");
   const [fromKey, setFromKey] = useState("native");
   const [toKey, setToKey] = useState(null);
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(initialShare.current.amount);
   const [slipBp, setSlipBp] = useState(50);
   const [customSlip, setCustomSlip] = useState("");
 
@@ -269,7 +305,21 @@ export default function LiveSwap({ wallet }) {
         if (!alive) return;
         setTokens(list);
         setStatus({ paused, feeBps: Number(feeBps) });
-        if (!toKey && list.length > 1) setToKey(tokenKey(list[1]));
+        const sh = initialShare.current;
+        const sf = sh.from ? resolveToken(list, sh.from) : null;
+        const st = sh.to ? resolveToken(list, sh.to) : null;
+        const fKey = sf ? tokenKey(sf) : "native";
+        if (sf) setFromKey(fKey);
+        if (st && tokenKey(st) !== fKey) setToKey(tokenKey(st));
+        else if (!toKey && list.length > 1) setToKey(tokenKey(list.find((t) => tokenKey(t) !== fKey) || list[1]));
+        if (sh.present) {
+          const bad = (sh.from && !sf) || (sh.to && !st);
+          setShareNote(
+            bad
+              ? "This link names a token Nodal doesn't support, so part of it was ignored. Check the pair below."
+              : "Opened from a shared link. It only fills in the form: check the pair and amount, and nothing is sent until you confirm in your wallet."
+          );
+        }
       } catch (e) {
         if (alive) setLoadErr(friendlyError(e));
         resetReadProvider();
@@ -554,6 +604,10 @@ export default function LiveSwap({ wallet }) {
         </div>
       )}
 
+      {shareNote && (
+        <p data-testid="share-note" style={{ margin: "0 0 12px", fontSize: 12.5, color: "var(--n-muted)" }}>{shareNote}</p>
+      )}
+
       {/* You pay */}
       <div style={boxStyle}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
@@ -661,6 +715,7 @@ export default function LiveSwap({ wallet }) {
           />
           <SourceComparison quote={quote} toToken={toToken} />
           <QuoteAge quote={quote} nowMs={nowMs} onRefresh={() => setRefreshTick((n) => n + 1)} />
+          <ShareLink tokens={tokens} fromToken={fromToken} toToken={toToken} amount={amount} />
         </div>
       )}
 
@@ -902,6 +957,44 @@ function Row({ label, value, muted, bold, color }) {
       <span style={{ fontFamily: "'Space Mono', monospace", fontSize: bold ? 15 : 13, fontWeight: bold ? 700 : 400, color: color || (bold ? "var(--n-ink)" : muted ? "var(--n-coral)" : "var(--n-ink)"), textAlign: "right" }}>
         {value}
       </span>
+    </div>
+  );
+}
+
+export function ShareLink({ tokens, fromToken, toToken, amount }) {
+  const [state, setState] = useState("idle"); // idle | copied | failed
+  const url = buildShareUrl(`${window.location.origin}${window.location.pathname}`, tokens, fromToken, toToken, amount);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setState("copied");
+    } catch {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = url;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        setState(ok ? "copied" : "failed");
+      } catch {
+        setState("failed");
+      }
+    }
+    setTimeout(() => setState("idle"), 2500);
+  };
+  return (
+    <div data-testid="share-link" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, fontSize: 12, color: "var(--n-dim2)" }}>
+      <span>{state === "failed" ? "Couldn't copy. Select the address bar link instead." : "Share this pair and amount (prices are not included)."}</span>
+      <button
+        type="button"
+        onClick={copy}
+        style={{ fontSize: 12, padding: "3px 10px", borderRadius: 999, border: "1px solid color-mix(in srgb, var(--n-white-ov) 14%, transparent)", background: "transparent", color: "var(--n-muted)", cursor: "pointer" }}
+      >
+        {state === "copied" ? "Copied" : "Copy link"}
+      </button>
     </div>
   );
 }
