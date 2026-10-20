@@ -4,8 +4,9 @@
 export const RPC_REGISTRY_URL = "/api/rpcs";
 
 // Built-in list: used when the live list can't be loaded, and for the "add network" wallet prompt.
-// Last reviewed 1 Oct 2026 against bdag.community/chain#nodes.
+// Last reviewed 20 Oct 2026. The community gateway goes first; the individual nodes are fallbacks.
 export const FALLBACK_RPCS = [
+  "https://rpc.community.bdag-us.org",
   "https://rpc.capedag.com",
   "https://rms-bdag-rpc.de/api/rpc-live",
   "https://rpc.dvdmining.com",

@@ -81,3 +81,26 @@ export function toRpcList(board) {
     excluded,
   };
 }
+
+// The community gateway (rpc.community.bdag-us.org) load-balances across the community node list
+// and only routes to nodes on chain 1404 that are at most a few blocks behind. When its status
+// file says it's healthy it goes first; the individual nodes stay behind it as fallbacks.
+export const GATEWAY_URL = "https://rpc.community.bdag-us.org";
+export const GATEWAY_STATUS_URL = GATEWAY_URL + "/status.json";
+
+export function withGateway(list, status) {
+  const base = list || { source: "https://bdag.community/chain#nodes", checkedAt: null, rpcs: [], excluded: [] };
+  const healthy = status && status.chain_id === 1404 && typeof status.healthy === "number" ? status.healthy : 0;
+  const gateway = {
+    name: "BDAG Community RPC",
+    url: GATEWAY_URL,
+    blurb: "Load-balanced community gateway: routes each request to a healthy, up-to-date node.",
+    canonical: false,
+    status: healthy > 0 ? "ok" : "offline",
+    usable: healthy > 0,
+    latencyMs: null,
+    headDelta: healthy > 0 ? 0 : null,
+  };
+  const rest = base.rpcs.filter((r) => r.url !== GATEWAY_URL);
+  return { ...base, rpcs: gateway.usable ? [gateway, ...rest] : [...rest, gateway] };
+}
