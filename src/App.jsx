@@ -29,7 +29,7 @@ const BLOCKDAG_CHAIN_ID_HEX = "0x57c";
 // matches the published chain data; the rest follow in the built-in order.
 const LISTED_RPC = "https://rpc.bdagexplorer.com";
 const BLOCKDAG_RPCS = [LISTED_RPC, ...FALLBACK_RPCS.filter((u) => u !== LISTED_RPC)];
-const BLOCKDAG_EXPLORER = "https://explorer.blockdag.engineering/";
+const BLOCKDAG_EXPLORER = "https://explorer.east.bdag-us.org/";
 
 const WalletContext = createContext(null);
 function useWallet() {
