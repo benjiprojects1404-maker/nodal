@@ -159,13 +159,18 @@ async function findPath(ro, a, b) {
   return null;
 }
 
+// Reef pools that Reef's own site hides (pair index 1 is the BDAG/CTEST test pool), so their
+// tokens aren't listed here either. Display-only: the pool still exists and routes by address.
+const HIDDEN_PAIR_INDEXES = new Set([1]);
+
 async function discoverTokens(ro) {
   const factory = new Contract(CFG.factory, FACTORY_ABI, ro);
   const n = Number(await factory.allPairsLength());
   const pairs = await Promise.all(Array.from({ length: Math.min(n, 200) }, (_, i) => factory.allPairs(i)));
   const addrs = new Set();
   await Promise.all(
-    pairs.map(async (p) => {
+    pairs.map(async (p, idx) => {
+      if (HIDDEN_PAIR_INDEXES.has(idx)) return;
       const c = new Contract(p, PAIR_ABI, ro);
       const [t0, t1] = await Promise.all([c.token0(), c.token1()]);
       addrs.add(lc(t0));
