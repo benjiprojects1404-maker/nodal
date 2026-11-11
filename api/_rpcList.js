@@ -104,3 +104,46 @@ export function withGateway(list, status) {
   const rest = base.rpcs.filter((r) => r.url !== GATEWAY_URL);
   return { ...base, rpcs: gateway.usable ? [gateway, ...rest] : [...rest, gateway] };
 }
+
+// Can a web page actually use this RPC? The node board checks nodes from a server, where CORS
+// doesn't apply, so a node can look healthy there and still fail in every browser: e.g.
+// rpc.east/west.bdag-us.org answer with two Access-Control-Allow-Origin values
+// ("https://site, *"), which browsers reject. This repeats the browser's checks from the server:
+// the preflight (OPTIONS) and the real POST must each carry exactly one allowed origin.
+export const BROWSER_ORIGIN = "https://www.nodaldex.fyi";
+const originOk = (v, origin) => typeof v === "string" && (v.trim() === "*" || v.trim() === origin);
+const headersOk = (v) => typeof v === "string" && (v.trim() === "*" || v.toLowerCase().split(",").map((x) => x.trim()).includes("content-type"));
+
+export async function browserCheck(url, fetchImpl = fetch, origin = BROWSER_ORIGIN, timeoutMs = 2500) {
+  try {
+    const pre = await fetchImpl(url, {
+      method: "OPTIONS",
+      headers: { origin, "access-control-request-method": "POST", "access-control-request-headers": "content-type" },
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    if (!originOk(pre.headers.get("access-control-allow-origin"), origin)) return false;
+    // A JSON POST sends a content-type header browsers don't allow by default, so the preflight must allow it.
+    if (!headersOk(pre.headers.get("access-control-allow-headers"))) return false;
+    const r = await fetchImpl(url, {
+      method: "POST",
+      headers: { origin, "content-type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_chainId", params: [] }),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    return r.ok && originOk(r.headers.get("access-control-allow-origin"), origin);
+  } catch (e) {
+    return false;
+  }
+}
+
+// Marks nodes browsers can't use: not usable (sites skip them) and last in the list.
+// Nodes the board already marks unusable aren't probed.
+export async function withBrowserCheck(list, check = browserCheck) {
+  const results = await Promise.all(list.rpcs.map((r) => (r.usable ? check(r.url) : Promise.resolve(null))));
+  const rpcs = list.rpcs.map((r, i) => (results[i] === false ? { ...r, usable: false, status: "no browser access", browserOk: false }
+    : results[i] === true ? { ...r, browserOk: true } : r));
+  // If every node failed, the probe itself was probably blocked (not every node broken): keep the list as it was.
+  if (!rpcs.some((r) => r.usable)) return list;
+  const rank = (r) => (r.browserOk === false ? 1 : 0);
+  return { ...list, rpcs: rpcs.map((r, i) => [r, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map(([r]) => r) };
+}
