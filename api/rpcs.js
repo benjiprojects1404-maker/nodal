@@ -1,10 +1,13 @@
 // GET /api/rpcs: the live BlockDAG RPC list, shared by nodaldex.fyi, handshakeotc.fyi and reefdex.fyi.
 // Proxies bdag.community's node board (which doesn't send CORS headers) and filters it, and puts
 // the community gateway (rpc.community.bdag-us.org) first when its status file says it is healthy.
+// Also checks each node the way a browser would (CORS), and marks failures unusable.
 // Cached at Vercel's edge for 2 minutes. Every site keeps a built-in list to fall back on.
-import { toRpcList, withGateway, GATEWAY_STATUS_URL } from "./_rpcList.js";
+import { toRpcList, withGateway, withBrowserCheck, GATEWAY_STATUS_URL } from "./_rpcList.js";
 
 const SOURCE = "https://bdag.community/api/nodes";
+// Board fetch (up to 8 s) plus the browser checks (up to 5 s, all nodes in parallel).
+export const maxDuration = 20;
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -24,7 +27,8 @@ export default async function handler(req, res) {
     ]);
     const board = boardRes.status === "fulfilled" ? boardRes.value : null;
     const gwStatus = gwRes.status === "fulfilled" ? gwRes.value : null;
-    const list = withGateway(board, gwStatus);
+    // Then drop nodes a browser can't reach (CORS), which the board's server-side check can't see.
+    const list = await withBrowserCheck(withGateway(board, gwStatus));
     if (!list.rpcs.some((r) => r.usable)) {
       throw new Error(boardRes.status === "rejected" ? String(boardRes.reason && boardRes.reason.message || boardRes.reason) : "node board lists no usable RPCs");
     }
