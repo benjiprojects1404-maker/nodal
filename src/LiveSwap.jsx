@@ -795,6 +795,72 @@ export default function LiveSwap({ wallet }) {
 
 const POOL_FEE_PCT = 0.3; // Reef: 0.30% per pool hop, already reflected in its quote
 
+/* ---------------- Token facts (from Reef's public API) ---------------- */
+// FDV, liquidity and LP-lock share come from reefdex.fyi/api/v1/pairs, so Nodal and Reef always show the
+// same numbers and the maths lives in one place. Display only: nothing here affects routing or quotes.
+const REEF_PAIRS_API = "https://reefdex.fyi/api/v1/pairs";
+let reefPairsCache = null; // { at, byToken }
+async function loadReefPairs() {
+  if (reefPairsCache && Date.now() - reefPairsCache.at < 60000) return reefPairsCache.byToken;
+  const r = await fetch(REEF_PAIRS_API, { signal: AbortSignal.timeout(8000) });
+  const j = await r.json();
+  const byToken = {};
+  for (const p of j.pairs || j || []) if (p && p.token) byToken[lc(p.token)] = p;
+  reefPairsCache = { at: Date.now(), byToken };
+  return byToken;
+}
+export function fmtCompact(n) {
+  const v = Number(n);
+  if (!isFinite(v)) return "–";
+  const a = Math.abs(v);
+  const [d, s] = a >= 1e12 ? [1e12, "T"] : a >= 1e9 ? [1e9, "B"] : a >= 1e6 ? [1e6, "M"] : a >= 1e3 ? [1e3, "K"] : [1, ""];
+  const x = v / d;
+  return (x >= 100 || !s ? x.toLocaleString("en-US", { maximumFractionDigits: s ? 0 : 2 }) : x.toFixed(x >= 10 ? 1 : 2).replace(/\.?0+$/, "")) + s;
+}
+function TokenFacts({ fromToken, toToken, card, h, note }) {
+  const list = [toToken, fromToken].filter((t) => t && !t.native && t.address);
+  const [state, setState] = useState({ status: "idle", byToken: null });
+  const keys = list.map((t) => lc(t.address)).join(",");
+  useEffect(() => {
+    if (!keys) return;
+    let live = true;
+    setState((s) => ({ ...s, status: s.byToken ? "ok" : "loading" }));
+    loadReefPairs().then((byToken) => live && setState({ status: "ok", byToken })).catch(() => live && setState({ status: "error", byToken: null }));
+    return () => { live = false; };
+  }, [keys]);
+  if (!list.length) return null;
+  return (
+    <div style={card} data-testid="token-facts">
+      <h3 style={h}>Token facts</h3>
+      {state.status === "loading" && <p style={{ ...note, marginTop: 0 }}>Reading Reef's pool data…</p>}
+      {state.status === "error" && <p style={{ ...note, marginTop: 0 }}>Couldn't load pool data from Reef just now.</p>}
+      {state.status === "ok" && list.map((t, i) => {
+        const p = state.byToken[lc(t.address)];
+        const liq = p && Number(p.liquidityBDAG);
+        const fdv = p && p.fdvBDAG != null ? Number(p.fdvBDAG) : null;
+        const thin = fdv !== null && liq > 0 && fdv > liq * 100;
+        return (
+          <div key={t.address} style={{ marginTop: i ? 12 : 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--n-ink)", marginBottom: 6 }}>{t.symbol}</div>
+            {p ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                <Row label="FDV" value={fdv !== null ? `${fmtCompact(fdv)} BDAG${thin ? " · thin" : ""}` : "–"} color={thin ? "var(--n-coral)" : undefined} />
+                <Row label="Pool liquidity (both sides)" value={`${fmtCompact(liq)} BDAG`} />
+                <Row label="LP locked or burned" value={`${fmtCompact(p.lpLockedOrBurnedPct)}%`} color={p.lpLockedOrBurnedPct >= 50 ? "var(--n-green-soft)" : "var(--n-coral)"} />
+              </div>
+            ) : (
+              <p style={{ ...note, marginTop: 0 }}>No BDAG pool on Reef for this token yet.</p>
+            )}
+          </div>
+        );
+      })}
+      {state.status === "ok" && (
+        <p style={note}>FDV is total supply × the token's price in its Reef BDAG pool{list.some((t) => { const p = state.byToken[lc(t.address)]; return p && Number(p.fdvBDAG) > Number(p.liquidityBDAG) * 100; }) ? "; \"thin\" means FDV is over 100× the pool's liquidity, so treat it as a rough guide" : ""}. Data from <a href="https://reefdex.fyi/developers/" target="_blank" rel="noopener" style={{ color: "var(--n-cyan)" }}>Reef's public API</a>, quoted in BDAG.</p>
+      )}
+    </div>
+  );
+}
+
 function RouteDetails({ quote, quoting, fromToken, toToken, tokens, feeBps, capNow, recent }) {
   const card = { background: "var(--n-surface)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 16, padding: "20px 22px" };
   const h = { margin: "0 0 10px", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: 0.4, color: "var(--n-muted)", textTransform: "uppercase" };
@@ -869,6 +935,8 @@ function RouteDetails({ quote, quoting, fromToken, toToken, tokens, feeBps, capN
         )}
         </div>
       </div>
+
+      <TokenFacts fromToken={fromToken} toToken={toToken} card={card} h={h} note={note} />
 
       <div style={{ ...card, flex: 1 }}>
         <h3 style={h}>Recent trades through Nodal</h3>
