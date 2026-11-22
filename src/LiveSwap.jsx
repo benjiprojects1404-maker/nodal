@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { BrowserProvider, Contract, Interface, JsonRpcProvider, ZeroAddress, decodeBytes32String, formatUnits, getAddress, parseUnits } from "ethers";
 import { getReadRpcs } from "./rpcRegistry.js";
+import { tokenCheckFor, worstOf } from "./tokenCheck.js";
 import { ArrowDownUp, AlertTriangle, Loader2, Wallet, Check, ExternalLink } from "lucide-react";
 
 /* ---------------------------------------------------------------------------
@@ -290,6 +291,8 @@ export default function LiveSwap({ wallet }) {
   const [txErr, setTxErr] = useState("");
   const [lastTx, setLastTx] = useState(null); // { hash, summary }
   const [impactArmed, setImpactArmed] = useState(false);
+  const [tokCheck, setTokCheck] = useState(null); // { key, sym, buying, address, state: loading|ok|error, items }
+  const [riskArmed, setRiskArmed] = useState(false);
   const [capNow, setCapNow] = useState(null); // beta limit for the token being paid
   const [recent, setRecent] = useState({ state: "loading", items: [] });
 
@@ -298,6 +301,26 @@ export default function LiveSwap({ wallet }) {
 
   const fromToken = tokens.find((t) => tokenKey(t) === fromKey) || tokens[0];
   const toToken = toKey ? tokens.find((t) => tokenKey(t) === toKey) : null;
+
+  // Pre-sign token check for the token being bought (or sold, when the other side is BDAG). Same checks as Reef.
+  const checkSubject = toToken && !toToken.native ? { t: toToken, buying: true } : toToken && fromToken && !fromToken.native ? { t: fromToken, buying: false } : null;
+  const checkKey = checkSubject ? lc(checkSubject.t.address) + (checkSubject.buying ? ":buy" : ":sell") : "";
+  useEffect(() => {
+    setRiskArmed(false);
+    if (!checkSubject) { setTokCheck(null); return; }
+    const { t, buying } = checkSubject;
+    let live = true;
+    setTokCheck({ key: checkKey, sym: t.symbol, buying, address: t.address, state: "loading", items: [] });
+    (async () => {
+      const ro = await readProvider();
+      const rpcUrls = CFG.rpc ? [CFG.rpc] : await getReadRpcs();
+      return tokenCheckFor({ token: t, ro, rpcUrls, factory: CFG.factory, wbdag: CFG.wbdag, loadPairs: loadReefPairs });
+    })()
+      .then((r) => live && setTokCheck({ key: checkKey, sym: t.symbol, buying, address: t.address, state: "ok", items: r.items }))
+      .catch(() => live && setTokCheck({ key: checkKey, sym: t.symbol, buying, address: t.address, state: "error", items: [] }));
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkKey]);
 
   // Load tokens + router status once.
   useEffect(() => {
@@ -493,6 +516,8 @@ export default function LiveSwap({ wallet }) {
   const impact = quote ? quote.impactPct : null;
   const impactLevel = impact === null ? "unknown" : impact >= MAX_IMPACT ? "blocked" : impact >= HIGH_IMPACT ? "high" : impact >= WARN_IMPACT ? "warn" : "ok";
   const busy = stage === "approving" || stage === "swapping";
+  const checkWorst = tokCheck && tokCheck.state === "ok" ? worstOf(tokCheck.items) : null;
+  const checkSerious = checkWorst === "bad";
 
   let blocker = "";
   if (loadErr) blocker = loadErr;
@@ -509,8 +534,10 @@ export default function LiveSwap({ wallet }) {
     setTxErr("");
     setLastTx(null);
     if (!quote) return;
-    if (impactLevel === "high" && !impactArmed) {
-      setImpactArmed(true);
+    // One extra tap covers both a high price impact and a serious token-check finding.
+    if ((impactLevel === "high" || checkSerious) && !(impactArmed || riskArmed)) {
+      setImpactArmed(impactLevel === "high");
+      setRiskArmed(checkSerious);
       return;
     }
     try {
@@ -570,6 +597,7 @@ export default function LiveSwap({ wallet }) {
       setStage("idle");
     } finally {
       setImpactArmed(false);
+      setRiskArmed(false);
     }
   };
 
@@ -587,11 +615,13 @@ export default function LiveSwap({ wallet }) {
   else if (stage === "swapping") label = (<><Loader2 size={16} className="nodal-spin" /> Confirm the swap in your wallet…</>);
   else if (blocker) label = blocker;
   else if (impactLevel === "high" && impactArmed) label = `Tap again to swap anyway (${impact.toFixed(1)}% impact)`;
+  else if (checkSerious && riskArmed) label = "Tap again to swap anyway (see the token check)";
+  else if (checkSerious) label = "Swap anyway";
   else if (!fromToken.native) label = `Approve & swap ${fromToken.symbol}`;
   else label = "Swap";
 
   const mainDisabled = !!address && !isWrongChain && (busy || !!blocker);
-  const danger = impactLevel === "high" && !blocker;
+  const danger = (impactLevel === "high" || checkSerious) && !blocker;
 
   const selectStyle = { fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14, background: "var(--n-raised)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)", borderRadius: 999, padding: "7px 14px", color: "var(--n-cyan)", cursor: "pointer", maxWidth: 140 };
   const boxStyle = { border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 12, background: "var(--n-surface0)", padding: "12px 14px" };
@@ -733,6 +763,8 @@ export default function LiveSwap({ wallet }) {
         </p>
       )}
 
+      {tokCheck && <TokenCheckBox check={tokCheck} />}
+
       <button
         data-testid="swap-btn"
         onClick={onMainClick}
@@ -795,19 +827,62 @@ export default function LiveSwap({ wallet }) {
 
 const POOL_FEE_PCT = 0.3; // Reef: 0.30% per pool hop, already reflected in its quote
 
+/* ---------------- Pre-sign token check (display) ---------------- */
+const CHECK_ICON = { ok: "✓", warn: "!", bad: "✕", na: "–" };
+const CHECK_COLOR = { ok: "var(--n-cyan)", warn: "var(--n-amber)", bad: "var(--n-red)", na: "var(--n-muted)" };
+function TokenCheckBox({ check }) {
+  const worst = check.state === "ok" ? worstOf(check.items) : null;
+  const border = worst === "bad" ? "var(--n-red)" : worst === "warn" ? "var(--n-amber)" : "color-mix(in srgb, var(--n-white-ov) 10%, transparent)";
+  return (
+    <div data-testid="token-check" data-worst={worst || check.state} style={{ marginTop: 12, border: `1px solid ${border}`, borderRadius: 12, background: "var(--n-surface0)", padding: "10px 14px", fontSize: 12.5, lineHeight: 1.5 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, color: "var(--n-muted)", marginBottom: check.items.length ? 4 : 0 }}>
+        <span>
+          <b style={{ color: "var(--n-ink)" }}>Token check</b> · {check.sym} {check.buying ? "(buying)" : "(selling)"}
+        </span>
+        {check.state === "loading" ? (
+          <span>reading the chain…</span>
+        ) : check.state === "error" ? (
+          <span>couldn't read the chain just now</span>
+        ) : (
+          <a href={`https://reefdex.fyi/token/?a=${check.address}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--n-cyan)", textDecoration: "none" }}>
+            Full report →
+          </a>
+        )}
+      </div>
+      {check.items.length > 0 && (
+        <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+          {check.items.map(([st, txt], i) => (
+            <li key={i} style={{ display: "flex", gap: 7, padding: "2px 0", color: st === "na" ? "var(--n-muted)" : "var(--n-ink)" }}>
+              <i style={{ fontStyle: "normal", flex: "none", width: 14, textAlign: "center", fontWeight: 700, color: CHECK_COLOR[st] }}>{CHECK_ICON[st]}</i>
+              <span>{txt}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 /* ---------------- Token facts (from Reef's public API) ---------------- */
 // FDV, liquidity and LP-lock share come from reefdex.fyi/api/v1/pairs, so Nodal and Reef always show the
 // same numbers and the maths lives in one place. Display only: nothing here affects routing or quotes.
 const REEF_PAIRS_API = "https://reefdex.fyi/api/v1/pairs";
+// Also used by the token check (LP lock), so one fetch serves both; concurrent callers share it.
 let reefPairsCache = null; // { at, byToken }
-async function loadReefPairs() {
-  if (reefPairsCache && Date.now() - reefPairsCache.at < 60000) return reefPairsCache.byToken;
-  const r = await fetch(REEF_PAIRS_API, { signal: AbortSignal.timeout(8000) });
-  const j = await r.json();
-  const byToken = {};
-  for (const p of j.pairs || j || []) if (p && p.token) byToken[lc(p.token)] = p;
-  reefPairsCache = { at: Date.now(), byToken };
-  return byToken;
+let reefPairsInFlight = null;
+function loadReefPairs() {
+  if (reefPairsCache && Date.now() - reefPairsCache.at < 60000) return Promise.resolve(reefPairsCache.byToken);
+  if (!reefPairsInFlight) {
+    reefPairsInFlight = (async () => {
+      const r = await fetch(REEF_PAIRS_API, { signal: AbortSignal.timeout(12000) });
+      const j = await r.json();
+      const byToken = {};
+      for (const p of j.pairs || j || []) if (p && p.token) byToken[lc(p.token)] = p;
+      reefPairsCache = { at: Date.now(), byToken };
+      return byToken;
+    })().finally(() => { reefPairsInFlight = null; });
+  }
+  return reefPairsInFlight;
 }
 export function fmtCompact(n) {
   const v = Number(n);
