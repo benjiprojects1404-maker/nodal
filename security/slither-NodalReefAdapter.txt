@@ -1,0 +1,11 @@
+INFO:Detectors:
+Detector: low-level-calls
+Low level call in NodalReefAdapter._call(address,bytes) (adapters/reef/NodalReefAdapter.sol#122-126):
+	- (ok,ret) = token.call(data) (adapters/reef/NodalReefAdapter.sol#124)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+INFO:Detectors:
+Detector: naming-convention
+Function IReefRouter.WBDAG() (adapters/reef/NodalReefAdapter.sol#33) is not in mixedCase
+Function NodalReefAdapter.WBDAG() (adapters/reef/NodalReefAdapter.sol#71-73) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+INFO:Slither:adapters/reef/NodalReefAdapter.sol analyzed (2 contracts with 102 detectors), 3 result(s) found
