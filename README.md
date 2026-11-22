@@ -1,6 +1,6 @@
 # Nodal
 
-A DEX aggregator for BlockDAG (chain ID 1404). Nodal compares the liquidity sources registered with its router contract and sends each trade through whichever one returns the most, taking a disclosed 0.15% routing fee.
+A DEX aggregator for BlockDAG (chain ID 1404). Nodal compares the liquidity sources registered with its router contract and sends each trade through whichever one returns the most, with any routing fee shown as its own line (0% while Reef is the only source; capped at 1% in the contract).
 
 **Status: beta.** The router is live on BlockDAG mainnet with **one liquidity source, Reef** (registered 30 Sep 2026 via `NodalReefAdapter`; Reef is built by the same team as Nodal). Trades are capped at 100 BDAG and 1,000,000 NOCAP each during the beta. The website's Swap tab trades live through NodalRouter; the Bridge tab is still a labelled preview.
 
@@ -28,14 +28,14 @@ the built-in list in `src/rpcRegistry.js`. Handshake and Reef use the same endpo
 
 | Path | Purpose |
 |---|---|
-| `NodalRouter.sol` | The aggregator contract: Ownable, ReentrancyGuard, Pausable, per-token deposit caps, fee hard-capped at 1% (currently 0.15%) |
+| `NodalRouter.sol` | The aggregator contract: Ownable, ReentrancyGuard, Pausable, per-token deposit caps, fee hard-capped at 1% (currently 0%, while Reef is the only source) |
 | `NodalMocks.sol` | **Testing only.** Mock ERC20 and mock DEX router for exercising the router without real liquidity |
 | `REMIX-TESTING-GUIDE.md` | Step-by-step guide for the testing team (deploy, mint, quote, approve, swap in Remix) |
 | `SEPOLIA-VALIDATION-GUIDE.md` | Validating the router against a real Uniswap V2 deployment on Sepolia |
 | `testing/nodal-remix-frontend.html` | Standalone wallet-connected page for driving a deployed router during testing (open it in a browser; paste in the contract address) |
 | `src/`, `index.html`, `public/` | The marketing/app website (React + Vite), deployed to Vercel |
 | `adapters/reef/` | `NodalReefAdapter.sol` lets Nodal route through Reef (Reef renames the V2 BDAG swap functions), plus its tests and `REEF-ACTIVATION-GUIDE.md` |
-| `docs/diagrams/` | Routing-architecture and fee-breakdown diagrams (SVG + PNG) |
+| `docs/diagrams/` | Routing-architecture and fee-breakdown diagrams (SVG + PNG; the fee diagram shows the original 0.15% fee) |
 
 ## Compiler settings (important)
 
@@ -137,4 +137,4 @@ Please report security issues privately to **security@nodaldex.fyi**, not in pub
 
 ## Disclaimer
 
-Experimental software on an early-stage chain. The source is published and has been checked with Slither, but it has not had an independent third-party audit. Contract ownership is held by a 2-of-3 hardware-wallet multisig.
+Experimental software on an early-stage chain. The source is published and has been checked with Slither and fuzz/invariant tests (results and how to re-run them: [`security/`](security/README.md)), but it has not had an independent third-party audit. Contract ownership is held by a 2-of-3 hardware-wallet multisig.

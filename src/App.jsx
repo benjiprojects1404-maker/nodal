@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useContext, createContext } from "react";
 import { FALLBACK_RPCS, loadRpcRegistry } from "./rpcRegistry.js";
-import LiveSwap, { loadLiveTokens } from "./LiveSwap.jsx";
+import LiveSwap, { loadLiveTokens, loadFeeBps, fmtFeeBps } from "./LiveSwap.jsx";
 import {
   ArrowDownUp,
   Check,
@@ -202,9 +202,9 @@ transaction once it is submitted to the network.
 investment, financial, tax, or legal advice. Quoted prices, routes, and fees
 are informational only and may change before your transaction confirms.
 
-4. Fees. Nodal charges a routing fee (currently 0.15%) on top of whatever fee
-the underlying liquidity source charges. Both are shown before you confirm
-any trade.
+4. Fees. Nodal may charge a routing fee (set in the NodalRouter contract,
+currently 0%, never above 1%) on top of whatever fee the underlying liquidity
+source charges. Both are shown before you confirm any trade.
 
 5. Jurisdiction restrictions. This software is not offered to, and may not be
 used by, persons located in, resident in, or accessing it from any
@@ -361,10 +361,8 @@ const BRIDGED_TOKENS = [
 
 const TOKENS = [...NATIVE_TOKENS, ...BRIDGED_TOKENS];
 
-// Nodal's own routing fee, on top of whatever the underlying DEX charges.
-// Shown as a separate line item, never folded invisibly into the quoted rate.
-const NODAL_FEE_RATE = 0.0015; // 0.15%
-const NODAL_FEE_LABEL = "0.15%";
+// Nodal's own routing fee is read live from NodalRouter (loadFeeBps), never hard-coded: the multisig
+// can change it (hard-capped at 1% in the contract). It's 0% while Reef is the only source.
 
 
 // Live, on-chain liquidity sources registered with NodalRouter (shown in the Sources section).
@@ -399,10 +397,10 @@ const FAQS = [
   { q: "What is Nodal?", a: "Nodal is a trade routing layer for BlockDAG (chain ID 1404). Instead of trading against a single DEX, you submit a trade once and Nodal compares it across every liquidity source it supports, then routes you to whichever one returns the most." },
   { q: "Which chain does this run on?", a: "BlockDAG mainnet exclusively, chain ID 1404." },
   { q: "Does Nodal ever hold my funds?", a: "Not between trades. When you swap, your tokens pass through the NodalRouter contract to the chosen DEX and the proceeds come straight back to your wallet, all inside one transaction. If anything fails, including the price moving past your slippage limit, the whole transaction reverts and nothing moves. For tokens (not BDAG) you first approve NodalRouter for exactly the amount you're swapping, never an unlimited allowance." },
-  { q: "What does Nodal charge?", a: `Nodal adds a small routing fee — ${NODAL_FEE_LABEL} — on top of whatever fee the underlying DEX charges. It's broken out as its own line item before you confirm, never folded invisibly into the quoted rate.` },
+  { q: "What does Nodal charge?", a: "Nothing at the moment. While Reef is the only liquidity source, Nodal's routing fee is 0%, so swapping through Nodal costs the same as swapping on Reef directly (you pay only Reef's 0.30% pool fee). Once a second DEX is live and there are real prices to compare, a small fee may be switched on. It's set in the contract, can never go above 1%, needs 2 of 3 multisig keys to change, and is always shown as its own line before you confirm." },
   { q: "Which liquidity sources are live right now?", a: "One: Reef, an AMM DEX on chain 1404. Reef is built by the same team as Nodal — we say so up front because Nodal's job is to route you to the best price, and with a single source there is nothing to compare yet. More sources are added, with one on-chain transaction each, as other DEXs launch real liquidity." },
   { q: "Can I bridge assets in from other chains?", a: "There's no official BlockDAG bridge live yet. The Bridge tab models the lock-and-mint flow you'd expect once one launches — it's a preview of the UI, not a working transfer. Don't send funds expecting them to arrive until a real bridge contract exists and has been audited." },
-  { q: "Has this been audited?", a: (<>Not by an independent auditor yet. On 2 October 2026 NodalRouter and its Reef adapter had an AI-assisted security review: read line by line, run through Slither, tested with attacks, and matched to their published source on chain. It found no critical, high or medium issues in Nodal. <a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "var(--n-cyan)" }}>Read the review</a>. That review isn't an audit and can't rule out bugs, so treat Nodal as beta software until an independent audit is done.</>) },
+  { q: "Has this been audited?", a: (<>Not by an independent auditor yet. On 2 October 2026 NodalRouter and its Reef adapter had an AI-assisted security review: read line by line, run through Slither, tested with attacks, and matched to their published source on chain. It found no critical, high or medium issues in Nodal. <a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "var(--n-cyan)" }}>Read the review</a>. The Slither results and 20 fuzz and invariant tests (100,000+ random trades) are published with the code: <a href="https://github.com/benjiprojects1404-maker/nodal/tree/main/security" target="_blank" rel="noopener" style={{ color: "var(--n-cyan)" }}>security report on GitHub</a>. That review isn't an audit and can't rule out bugs, so treat Nodal as beta software until an independent audit is done.</>) },
   { q: "I found a bug or security issue. Where do I report it?", a: "Anything that could put funds at risk: email security@nodaldex.fyi privately, not in a public issue or chat, so it can be fixed (or the router paused) first. Everything else, like wrong numbers or confusing wording, can go to the team or into an issue on the project's GitHub." },
 ];
 
@@ -682,9 +680,11 @@ function StatsBar() {
   // Real numbers only: tokens with a live pool are read from the chain. No dollar price is shown,
   // because the community chain's BDAG has no established outside market price.
   const [tokenCount, setTokenCount] = useState(null);
+  const [feeBps, setFeeBps] = useState(null);
   useEffect(() => {
     let alive = true;
     loadLiveTokens().then((l) => alive && setTokenCount(l.length)).catch(() => alive && setTokenCount(-1));
+    loadFeeBps().then((f) => alive && setFeeBps(f)).catch(() => alive && setFeeBps(-1));
     return () => { alive = false; };
   }, []);
 
@@ -692,7 +692,7 @@ function StatsBar() {
     { label: "Chain ID", value: "1404" },
     { label: "Tokens you can swap", value: tokenCount === null ? "…" : tokenCount < 0 ? "–" : String(tokenCount) },
     { label: "Live DEX sources", value: String(LIVE_SOURCES.length) },
-    { label: "Routing fee", value: NODAL_FEE_LABEL },
+    { label: "Routing fee", value: feeBps === null ? "…" : feeBps < 0 ? "–" : fmtFeeBps(feeBps) },
     { label: "Keys per admin action", value: "2 of 3" },
   ];
   return (

@@ -1,0 +1,31 @@
+name: Contract tests
+
+# Runs NodalRouter's Foundry fuzz and invariant tests (see security/README.md) when the contracts or tests change.
+on:
+  pull_request:
+    paths: ["**.sol", "test/foundry/**", "foundry.toml", ".github/workflows/contract-tests.yml"]
+  push:
+    branches: [main]
+    paths: ["**.sol", "test/foundry/**", "foundry.toml", ".github/workflows/contract-tests.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  foundry:
+    name: Foundry tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive # forge-std
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci # @openzeppelin/contracts 5.0.2
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+      - run: forge test

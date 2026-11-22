@@ -1,0 +1,7 @@
+INFO:Detectors:
+Detector: low-level-calls
+Low level call in NodalRouter._settleNativeOut(bytes32,address,uint256,uint256,uint256) (NodalRouter.sol#360-383):
+	- (sentFee,None) = address(treasury).call{value: fee}() (NodalRouter.sol#374)
+	- (sentUser,None) = address(msg.sender).call{value: netAmountOut}() (NodalRouter.sol#379)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+INFO:Slither:NodalRouter.sol analyzed (10 contracts with 102 detectors), 1 result(s) found

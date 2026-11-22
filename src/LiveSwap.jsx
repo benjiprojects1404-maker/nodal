@@ -194,6 +194,22 @@ async function discoverTokens(ro) {
   return [{ ...NATIVE }, ...infos];
 }
 
+// Nodal's routing fee in basis points, read from NodalRouter (the multisig can change it, so it's never hard-coded).
+let _feeBps = null;
+export function loadFeeBps() {
+  if (!_feeBps) {
+    _feeBps = readProvider()
+      .then((ro) => new Contract(CFG.router, ROUTER_ABI, ro).feeBps())
+      .then(Number)
+      .catch((e) => {
+        _feeBps = null;
+        throw e;
+      });
+  }
+  return _feeBps;
+}
+export const fmtFeeBps = (bps) => (bps % 100 === 0 ? `${bps / 100}%` : `${(bps / 100).toFixed(2)}%`);
+
 // Shared, cached token discovery (also used by the stats bar on the home page).
 let _liveTokens = null;
 export function loadLiveTokens() {
@@ -279,7 +295,7 @@ export default function LiveSwap({ wallet }) {
   const [slipBp, setSlipBp] = useState(50);
   const [customSlip, setCustomSlip] = useState("");
 
-  const [status, setStatus] = useState({ paused: false, feeBps: 15 });
+  const [status, setStatus] = useState({ paused: false, feeBps: 0 });
   const [balance, setBalance] = useState(null);
   const [quote, setQuote] = useState(null); // { path, amountIn, best, all, impactPct, cap }
   const [quoting, setQuoting] = useState(false);
@@ -739,7 +755,7 @@ export default function LiveSwap({ wallet }) {
         <div data-testid="breakdown" style={{ marginTop: 14, border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 12, background: "var(--n-surface0)", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
           <Row label="Route" value={`${quote.best.name}${quote.path.length > 2 ? " (via BDAG)" : ""}`} />
           <Row label={`${quote.best.name} output`} value={`${fmtUnits(quote.best.gross, toToken.decimals)} ${toToken.symbol}`} />
-          <Row label={`Nodal fee (${(status.feeBps / 100).toFixed(2)}%)`} value={`− ${fmtUnits(quote.best.fee, toToken.decimals)} ${toToken.symbol}`} muted />
+          <Row label={`Nodal fee (${fmtFeeBps(status.feeBps)})`} value={`− ${fmtUnits(quote.best.fee, toToken.decimals)} ${toToken.symbol}`} muted />
           <div style={{ height: 1, background: "color-mix(in srgb, var(--n-white-ov) 8%, transparent)", margin: "2px 0" }} />
           <Row label="You receive" value={`${fmtUnits(quote.best.net, toToken.decimals)} ${toToken.symbol}`} bold />
           <Row label={`Minimum after ${slipBp / 100}% slippage`} value={`${fmtUnits(minNet, toToken.decimals)} ${toToken.symbol}`} />
@@ -989,13 +1005,13 @@ function RouteDetails({ quote, quoting, fromToken, toToken, tokens, feeBps, capN
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
               <Row label={`${quote.best.name} pool fee (${POOL_FEE_PCT.toFixed(2)}%${hops > 1 ? ` × ${hops}` : ""})`} value="included in quote" />
-              <Row label={`Nodal fee (${(feeBps / 100).toFixed(2)}%)`} value={`${fmtUnits(quote.best.fee, toToken.decimals)} ${toToken.symbol}`} />
+              <Row label={`Nodal fee (${fmtFeeBps(feeBps)})`} value={`${fmtUnits(quote.best.fee, toToken.decimals)} ${toToken.symbol}`} />
             </div>
           </>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
             <Row label="Pool fee (Reef)" value={`${POOL_FEE_PCT.toFixed(2)}% per pool`} />
-            <Row label="Nodal routing fee" value={`${(feeBps / 100).toFixed(2)}% of output`} />
+            <Row label="Nodal routing fee" value={feeBps === 0 ? "0% (no fee while Reef is the only source)" : `${fmtFeeBps(feeBps)} of output`} />
             <p style={{ ...note, marginTop: 2 }}>Pairs without a direct pool route through BDAG, which means two pools and two pool fees. Both fees are shown before you confirm.</p>
           </div>
         )}
