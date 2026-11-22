@@ -72,11 +72,25 @@ async function taxCheck(ro, a) {
 }
 
 /** Returns { items: [[status, text]], partial } where status is ok | warn | bad | na. */
-export async function runTokenCheck({ token, ro, rpcUrls, factory, wbdag }) {
+// Pool data: Reef's full pairs list first (fast, cached, same fields), then the single-pool endpoint
+// (slow on a cold start). null = no BDAG pool on Reef; undefined = couldn't check.
+async function reefPool(al, loadPairs) {
+  if (loadPairs) {
+    try {
+      const byToken = await loadPairs();
+      if (byToken) return byToken[al] || null;
+    } catch {
+      /* fall through */
+    }
+  }
+  return getJsonT(REEF_PAIR_API + al, 15000).catch(() => getJsonT(REEF_PAIR_API + al, 15000)).catch(() => undefined);
+}
+
+export async function runTokenCheck({ token, ro, rpcUrls, factory, wbdag, loadPairs }) {
   const a = token.address;
   const al = a.toLowerCase();
   const [pool, sc, tax] = await Promise.all([
-    getJsonT(REEF_PAIR_API + al, 15000).catch(() => getJsonT(REEF_PAIR_API + al, 15000)).catch(() => undefined),
+    reefPool(al, loadPairs),
     getJsonT(`${EXPLORER_API}/smart-contracts/${a}`, 10000).catch(() => getJsonT(`${EXPLORER_API}/smart-contracts/${a}`, 15000)).catch(() => undefined),
     taxCheck(ro, al).catch(() => undefined),
   ]);

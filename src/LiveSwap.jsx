@@ -314,7 +314,7 @@ export default function LiveSwap({ wallet }) {
     (async () => {
       const ro = await readProvider();
       const rpcUrls = CFG.rpc ? [CFG.rpc] : await getReadRpcs();
-      return tokenCheckFor({ token: t, ro, rpcUrls, factory: CFG.factory, wbdag: CFG.wbdag });
+      return tokenCheckFor({ token: t, ro, rpcUrls, factory: CFG.factory, wbdag: CFG.wbdag, loadPairs: loadReefPairs });
     })()
       .then((r) => live && setTokCheck({ key: checkKey, sym: t.symbol, buying, address: t.address, state: "ok", items: r.items }))
       .catch(() => live && setTokCheck({ key: checkKey, sym: t.symbol, buying, address: t.address, state: "error", items: [] }));
@@ -867,15 +867,22 @@ function TokenCheckBox({ check }) {
 // FDV, liquidity and LP-lock share come from reefdex.fyi/api/v1/pairs, so Nodal and Reef always show the
 // same numbers and the maths lives in one place. Display only: nothing here affects routing or quotes.
 const REEF_PAIRS_API = "https://reefdex.fyi/api/v1/pairs";
+// Also used by the token check (LP lock), so one fetch serves both; concurrent callers share it.
 let reefPairsCache = null; // { at, byToken }
-async function loadReefPairs() {
-  if (reefPairsCache && Date.now() - reefPairsCache.at < 60000) return reefPairsCache.byToken;
-  const r = await fetch(REEF_PAIRS_API, { signal: AbortSignal.timeout(8000) });
-  const j = await r.json();
-  const byToken = {};
-  for (const p of j.pairs || j || []) if (p && p.token) byToken[lc(p.token)] = p;
-  reefPairsCache = { at: Date.now(), byToken };
-  return byToken;
+let reefPairsInFlight = null;
+function loadReefPairs() {
+  if (reefPairsCache && Date.now() - reefPairsCache.at < 60000) return Promise.resolve(reefPairsCache.byToken);
+  if (!reefPairsInFlight) {
+    reefPairsInFlight = (async () => {
+      const r = await fetch(REEF_PAIRS_API, { signal: AbortSignal.timeout(12000) });
+      const j = await r.json();
+      const byToken = {};
+      for (const p of j.pairs || j || []) if (p && p.token) byToken[lc(p.token)] = p;
+      reefPairsCache = { at: Date.now(), byToken };
+      return byToken;
+    })().finally(() => { reefPairsInFlight = null; });
+  }
+  return reefPairsInFlight;
 }
 export function fmtCompact(n) {
   const v = Number(n);
