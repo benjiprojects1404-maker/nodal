@@ -338,6 +338,20 @@ export default function LiveSwap({ wallet }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkKey]);
 
+  // A chip in the "Trading now" strip asks for BDAG -> that token.
+  useEffect(() => {
+    const onPick = (e) => {
+      const t = resolveToken(tokens, e.detail && e.detail.to);
+      if (!t) return;
+      setFromKey("native");
+      setToKey(tokenKey(t));
+      setStage("idle");
+      setShareNote("");
+    };
+    window.addEventListener("nodal-pick", onPick);
+    return () => window.removeEventListener("nodal-pick", onPick);
+  }, [tokens]);
+
   // Load tokens + router status once.
   useEffect(() => {
     let alive = true;
