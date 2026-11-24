@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useContext, createContext } from "react";
 import { FALLBACK_RPCS, loadRpcRegistry } from "./rpcRegistry.js";
 import LiveSwap, { loadLiveTokens, loadFeeBps, fmtFeeBps } from "./LiveSwap.jsx";
+import Ticker, { tickerCss } from "./Ticker.jsx";
 import {
   ArrowDownUp,
   Check,
@@ -448,6 +449,7 @@ export default function NodalLanding() {
         <BetaBanner />
         <Hero />
         <StatsBar />
+        <Ticker />
         <HowItWorks />
         <ProductSection />
         <Features />
@@ -467,6 +469,7 @@ function GlobalStyle() {
       .nodal-scope h1,.nodal-scope h2{font-family:'Bricolage Grotesque','Instrument Sans',sans-serif;font-weight:800;letter-spacing:-0.01em}
       .n-wordmark{font-family:'Bricolage Grotesque','Instrument Sans',sans-serif;font-weight:800;letter-spacing:-0.02em;line-height:1;color:var(--n-ink);display:inline-block;white-space:nowrap;flex:none}
       .n-o{position:relative;display:inline-block}
+      ${tickerCss}
       .n-o::after{content:"";position:absolute;left:50%;top:58%;width:.3em;height:.3em;margin:-.15em 0 0 -.15em;border-radius:50%;background:var(--n-cyan)}
       html, body { scroll-behavior: smooth; background: var(--n-bg); margin: 0; padding: 0; min-height: 100%; }
       body { overflow-x: hidden; }
