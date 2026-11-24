@@ -55,17 +55,22 @@ export default function Ticker() {
   const reduced = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   useEffect(() => {
-    let alive = true;
+    let alive = true, tries = 0, got = false;
     const load = async () => {
       try {
         const r = await fetch(TICKERS_API, { signal: AbortSignal.timeout(15000) });
         const d = r.ok ? await r.json() : null;
-        if (!alive || !d || !Array.isArray(d.tickers)) return;
+        if (!alive) return;
+        if (!d || !Array.isArray(d.tickers)) throw new Error("no data");
         // Busiest first (24h volume), then the deepest pools.
         const l = d.tickers.filter((t) => t.priceBDAG > 0)
           .sort((a, b) => (Number(b.volume24hBDAG) - Number(a.volume24hBDAG)) || (Number(b.liquidityBDAG) - Number(a.liquidityBDAG)));
-        if (l.length) setList(l);
-      } catch (e) { /* keep the last list, or stay hidden */ }
+        if (!l.length) throw new Error("no data");
+        setList(l); got = true;
+      } catch (e) {
+        // Keep the last list. If the first load failed (public nodes can be slow), try again soon.
+        if (alive && !got && ++tries <= 3) setTimeout(load, 5000 * tries);
+      }
     };
     load();
     const id = setInterval(load, 60000);
