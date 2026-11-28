@@ -18,7 +18,45 @@ import {
   Loader2,
   Wallet,
   Copy,
+  Info,
+  X as XIcon,
 } from "lucide-react";
+
+/* ---------------- App views (hash routed, like reefdex.fyi) ----------------
+ * One page, four views: #swap (default), #bridge, #sources, #about. Every view stays in the page
+ * (hidden when not active) so search engines and the FAQ anchors still find all of it.
+ * Old anchors keep working: #app → swap, #how → sources, #faq → about. */
+const VIEWS = ["swap", "bridge", "sources", "about"];
+const VIEW_ALIAS = { app: "swap", how: "sources", faq: "about", risks: "about", more: "about" };
+const TABS = [
+  { id: "swap", label: "Swap", icon: ArrowDownUp },
+  { id: "bridge", label: "Bridge", icon: Globe2 },
+  { id: "sources", label: "Sources", icon: Network },
+  { id: "about", label: "About", icon: Info },
+];
+function viewFromHash() {
+  if (typeof window === "undefined") return "swap";
+  const h = decodeURIComponent(window.location.hash.slice(1)).toLowerCase();
+  return VIEWS.includes(h) ? h : VIEW_ALIAS[h] || "swap";
+}
+function useView() {
+  const [view, setView] = useState(viewFromHash);
+  useEffect(() => {
+    const go = (first) => {
+      setView(viewFromHash());
+      const h = window.location.hash.slice(1);
+      // An anchor inside a view (#faq, #how) scrolls to it once the view is showing; a view tab goes to the top.
+      if (h && !VIEWS.includes(h)) setTimeout(() => { const el = document.getElementById(h); if (el) el.scrollIntoView({ block: "start" }); }, 0);
+      else if (!first) window.scrollTo({ top: 0, behavior: "instant" });
+    };
+    const on = () => go(false);
+    go(true);
+    window.addEventListener("hashchange", on);
+    return () => window.removeEventListener("hashchange", on);
+  }, []);
+  return view;
+}
+const isMobile = () => typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 /* ---------------- Wallet connection ---------------- */
 
@@ -84,7 +122,7 @@ function useWalletState() {
   const _doConnect = async () => {
     setError("");
     if (typeof window === "undefined" || !window.ethereum) {
-      setError("No EVM wallet detected. Install MetaMask or another browser wallet extension.");
+      setError("NO_WALLET"); // the wallet popup explains, with open-in-wallet links on phones
       return;
     }
     setConnecting(true);
@@ -94,7 +132,10 @@ function useWalletState() {
       const cidHex = await window.ethereum.request({ method: "eth_chainId" });
       setChainId(parseInt(cidHex, 16));
     } catch (e) {
-      setError(e && e.message ? e.message : "Connection request was rejected.");
+      // Cancelling in the wallet is a choice, not an error: stay quiet.
+      if (e && (e.code === 4001 || e.code === "ACTION_REJECTED")) return;
+      if (e && e.code === -32002) setError("A connection request is already waiting in your wallet. Open your wallet and approve it there.");
+      else setError(e && e.message ? e.message : "The wallet didn't connect. Please try again.");
     } finally {
       setConnecting(false);
     }
@@ -163,6 +204,7 @@ function useWalletState() {
     chainId,
     connecting,
     error,
+    clearError: () => setError(""),
     connect,
     disconnect,
     switchToBlockDAG,
@@ -438,27 +480,200 @@ function Logo({ size = 28 }) {
 
 export default function NodalLanding() {
   const wallet = useWalletState();
+  const view = useView();
   return (
     <WalletContext.Provider value={wallet}>
-      <div style={{ position: "relative", minHeight: "100%", background: "var(--n-bg)", fontFamily: "'Instrument Sans', sans-serif", color: "var(--n-ink)" }}>
+      <div className="n-app" data-view={view} style={{ position: "relative", minHeight: "100%", background: "var(--n-bg)", fontFamily: "'Instrument Sans', sans-serif", color: "var(--n-ink)" }}>
         <GlobalStyle />
-        {/* Hero glow runs from the very top, behind the nav and beta notice, so the header reads as one block. */}
+        {/* Glow runs from the very top, behind the header, so the header reads as one block. */}
         <div aria-hidden="true" className="nodal-scope" style={{ position: "absolute", top: 0, left: 0, right: 0, height: 760, background: "radial-gradient(ellipse 1000px 620px at 15% 0%, var(--n-raised2) 0%, transparent 62%), radial-gradient(ellipse 900px 620px at 100% 6%, var(--n-purpledeep) 0%, transparent 58%)", pointerEvents: "none", zIndex: 0 }} />
         {wallet.showTosGate && <TosGateModal />}
-        <NavBar />
-        <BetaBanner />
-        <Hero />
-        <StatsBar />
-        <Ticker />
-        <HowItWorks />
-        <ProductSection />
-        <Features />
-        <Sources />
-        <FAQ />
+        <WalletNotice />
+        <AppHeader view={view} />
+        <main className="n-views">
+          <div className="n-view" hidden={view !== "swap"}>
+            <Ticker />
+            <SwapView />
+          </div>
+          <div className="n-view" hidden={view !== "bridge"}>
+            <BridgeView />
+          </div>
+          <div className="n-view" hidden={view !== "sources"}>
+            <Sources />
+            <HowItWorks />
+          </div>
+          <div className="n-view" hidden={view !== "about"}>
+            <Hero />
+            <StatsBar />
+            <BetaBanner />
+            <Features />
+            <FAQ />
+          </div>
+        </main>
         <RpcStatusPanel />
         <Footer />
+        <BottomNav view={view} />
       </div>
     </WalletContext.Provider>
+  );
+}
+
+/* ---------------- App header, logo menu and phone bottom nav ---------------- */
+
+const MENU = [
+  { title: "Resources", links: [
+    { href: "/overview.pdf", label: "Overview brief (PDF)", ext: true },
+    { href: "https://benjiprojects1404-services.pages.dev/security-review/", label: "Security review", ext: true },
+    { href: "https://github.com/benjiprojects1404-maker/nodal/tree/main/security", label: "Slither & fuzz test reports", ext: true },
+    { href: "/rpcs", label: "Public RPC list" },
+    { href: "mailto:security@nodaldex.fyi", label: "Report a security issue" },
+  ] },
+  { title: "Also on BlockDAG", links: [
+    { href: "https://reefdex.fyi", label: "Reef DEX", ext: true },
+    { href: "https://handshakeotc.fyi", label: "Handshake OTC", ext: true },
+  ] },
+  { title: "Learn", links: [
+    { href: "#how", label: "How routing works" },
+    { href: "#risks", label: "Beta notes & risks" },
+    { href: "#faq", label: "FAQ" },
+  ] },
+];
+const SOCIALS = [
+  { href: "https://x.com/benji107", label: "X", d: "M4 4l16 16M20 4 4 20" },
+  { href: "https://t.me/undercurrentworks", label: "Telegram", d: "m21 4-18 7 6 2 2 6 3-4 5 4 2-15Z" },
+  { href: "https://github.com/benjiprojects1404-maker/nodal", label: "GitHub", d: "M9 19c-4 1.5-4-2-6-2.5m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12 12 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" },
+];
+
+function AppHeader({ view }) {
+  const { address, disconnect } = useWallet();
+  const [menu, setMenu] = useState(false);
+  const box = useRef(null);
+  useEffect(() => { setMenu(false); }, [view]);
+  useEffect(() => {
+    if (!menu) return;
+    const off = (e) => { if (box.current && !box.current.contains(e.target)) setMenu(false); };
+    const key = (e) => { if (e.key === "Escape") setMenu(false); };
+    document.addEventListener("mousedown", off);
+    document.addEventListener("touchstart", off, { passive: true });
+    document.addEventListener("keydown", key);
+    return () => { document.removeEventListener("mousedown", off); document.removeEventListener("touchstart", off); document.removeEventListener("keydown", key); };
+  }, [menu]);
+  return (
+    <header className="nodal-scope n-top">
+      <div className="n-topwrap">
+        <div className="n-brand" ref={box}>
+          <button type="button" className="n-brandbtn" onClick={() => setMenu(!menu)} aria-expanded={menu} aria-haspopup="menu" aria-label="Nodal menu">
+            <Logo size={26} />
+            <ChevronDown size={16} className="n-chev" />
+          </button>
+          {menu && (
+            <div className="n-menu" role="menu">
+              {MENU.map((g) => (
+                <div className="n-mgrp" key={g.title}>
+                  <b>{g.title}</b>
+                  {g.links.map((l) => (
+                    <a key={l.label} href={l.href} role="menuitem" onClick={() => setMenu(false)} {...(l.ext ? { target: "_blank", rel: "noopener" } : {})}>{l.label}</a>
+                  ))}
+                </div>
+              ))}
+              {address && (
+                <div className="n-mgrp">
+                  <b>Wallet</b>
+                  <button type="button" role="menuitem" onClick={() => { disconnect(); setMenu(false); }}>Disconnect {truncateAddress(address)}</button>
+                </div>
+              )}
+              <div className="n-msoc">
+                {SOCIALS.map((s) => (
+                  <a key={s.label} href={s.href} target="_blank" rel="noopener" aria-label={s.label}><svg viewBox="0 0 24 24"><path d={s.d} /></svg></a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <span className="n-beta">Beta</span>
+        <nav className="n-tabs" aria-label="Sections">
+          {TABS.map((t) => (
+            <a key={t.id} href={"#" + t.id} className={view === t.id ? "on" : ""} aria-current={view === t.id ? "page" : undefined}>{t.label}</a>
+          ))}
+        </nav>
+        <div className="n-spacer" />
+        <RpcBadge />
+        <WalletButton />
+      </div>
+    </header>
+  );
+}
+
+function BottomNav({ view }) {
+  return (
+    <nav className="nodal-scope n-bottomnav" aria-label="Sections">
+      {TABS.map((t) => (
+        <a key={t.id} href={"#" + t.id} className={view === t.id ? "on" : ""} aria-current={view === t.id ? "page" : undefined}>
+          <t.icon size={20} strokeWidth={1.8} />
+          <span>{t.label}</span>
+        </a>
+      ))}
+    </nav>
+  );
+}
+
+/* Wallet messages as a popup, so they show on every view (and on phones, where the header has no room). */
+function WalletNotice() {
+  const { error, clearError } = useWallet();
+  useEffect(() => {
+    if (!error) return;
+    const key = (e) => { if (e.key === "Escape") clearError(); };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [error]);
+  if (!error) return null;
+  const noWallet = error === "NO_WALLET";
+  const here = typeof window !== "undefined" ? window.location.host + window.location.pathname : "www.nodaldex.fyi/";
+  const url = typeof window !== "undefined" ? window.location.href : "https://www.nodaldex.fyi/";
+  return (
+    <div className="nodal-scope n-modal" role="dialog" aria-modal="true" aria-labelledby="n-wn-title" onClick={(e) => { if (e.target === e.currentTarget) clearError(); }}>
+      <div className="n-modalbox">
+        <button type="button" className="n-modalx" onClick={clearError} aria-label="Close"><XIcon size={18} /></button>
+        <h2 id="n-wn-title">{noWallet ? "No wallet found" : "Wallet"}</h2>
+        {noWallet ? (
+          isMobile() ? (
+            <>
+              <p>Phone browsers can't reach a wallet app directly. Open Nodal inside your wallet's own browser instead:</p>
+              <div className="n-modalbtns">
+                <a href={"https://metamask.app.link/dapp/" + here}>Open in MetaMask</a>
+                <a href={"https://link.trustwallet.com/open_url?coin_id=60&url=" + encodeURIComponent(url)}>Open in Trust Wallet</a>
+              </div>
+              <p className="n-modalnote">Using another wallet? Open its browser and go to nodaldex.fyi.</p>
+            </>
+          ) : (
+            <p>Nodal needs an EVM browser wallet such as MetaMask, Rabby or Trust Wallet. Install one, refresh this page, then press Connect wallet again.</p>
+          )
+        ) : (
+          <p>{error}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SwapView() {
+  const wallet = useWallet();
+  return (
+    <Section id="app" style={{ paddingTop: 16 }}>
+      <LiveSwap wallet={wallet} />
+    </Section>
+  );
+}
+
+function BridgeView() {
+  return (
+    <Section id="bridge-view" style={{ paddingTop: 20 }}>
+      <div className="n-sechead">
+        <h2>Bridge</h2>
+        <p>Bring the top assets in crypto onto chain 1404. No BlockDAG bridge exists yet, so this is a preview of how it will work.</p>
+      </div>
+      <BridgeTool />
+    </Section>
   );
 }
 
@@ -488,6 +703,56 @@ function GlobalStyle() {
         outline: 2px solid var(--n-cyan);
         outline-offset: 2px;
       }
+      /* App layout (Nov 2026): header with logo menu + tabs, one view at a time, bottom nav on phones. */
+      .n-top{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--n-bg) 82%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid color-mix(in srgb,var(--n-white-ov) 6%,transparent)}
+      .n-topwrap{max-width:960px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:12px}
+      .n-brand{position:relative;flex:none}
+      .n-brandbtn{display:flex;align-items:center;gap:4px;background:none;border:0;padding:4px 6px 4px 0;cursor:pointer;color:var(--n-ink)}
+      .n-chev{color:var(--n-muted);transition:transform .2s}
+      .n-brandbtn[aria-expanded="true"] .n-chev{transform:rotate(180deg)}
+      .n-menu{position:absolute;top:calc(100% + 10px);left:0;width:270px;max-height:calc(100vh - 90px);overflow:auto;background:var(--n-surface);border:1px solid var(--n-line-strong);border-radius:14px;padding:8px;box-shadow:0 24px 48px -16px rgba(0,0,0,.6);z-index:60}
+      .n-mgrp{padding:6px 4px 8px;border-bottom:1px solid color-mix(in srgb,var(--n-white-ov) 6%,transparent)}
+      .n-mgrp b{display:block;font:700 11px/1 'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--n-dim2);padding:6px 8px 6px}
+      .n-mgrp a,.n-mgrp button{display:block;width:100%;text-align:left;background:none;border:0;font:500 14px/1.3 'Instrument Sans',sans-serif;color:var(--n-soft);text-decoration:none;padding:8px;border-radius:8px;cursor:pointer}
+      .n-mgrp a:hover,.n-mgrp button:hover{background:var(--n-raised);color:var(--n-ink)}
+      .n-msoc{display:flex;gap:8px;padding:10px 8px 4px}
+      .n-msoc a{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--n-line-strong);color:var(--n-muted)}
+      .n-msoc a:hover{color:var(--n-ink);border-color:var(--n-cyan)}
+      .n-msoc svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+      .n-beta{flex:none;font:700 10px/1 'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--n-coral);border:1px solid color-mix(in srgb,var(--n-coral) 40%,transparent);border-radius:999px;padding:4px 8px}
+      .n-tabs{display:flex;gap:4px;background:var(--n-surface0);border:1px solid color-mix(in srgb,var(--n-white-ov) 8%,transparent);border-radius:12px;padding:4px;margin-left:6px}
+      .n-tabs a{font:600 14px/1 'Instrument Sans',sans-serif;color:var(--n-muted);text-decoration:none;padding:8px 14px;border-radius:8px}
+      .n-tabs a:hover{color:var(--n-ink)}
+      .n-tabs a.on{background:var(--n-raised2);color:var(--n-ink)}
+      .n-spacer{flex:1}
+      .n-views{position:relative;z-index:1;min-height:60vh;padding-bottom:12px}
+      .n-sechead{margin:0 0 16px}
+      .n-sechead h2{margin:0 0 6px;font-size:22px}
+      .n-sechead p{margin:0;font-size:15px;line-height:1.55;color:var(--n-muted);max-width:620px}
+      .n-bottomnav{display:none}
+      .n-modal{position:fixed;inset:0;z-index:110;background:color-mix(in srgb,var(--n-bg) 80%,transparent);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px}
+      .n-modalbox{position:relative;width:100%;max-width:420px;background:var(--n-surface);border:1px solid var(--n-line-strong);border-radius:16px;padding:22px 22px 20px}
+      .n-modalbox h2{margin:0 0 10px;font-size:18px}
+      .n-modalbox p{margin:0 0 12px;font-size:14px;line-height:1.55;color:var(--n-soft)}
+      .n-modalbox .n-modalnote{font-size:12.5px;color:var(--n-dim2);margin:0}
+      .n-modalx{position:absolute;top:12px;right:12px;background:none;border:0;color:var(--n-muted);cursor:pointer;padding:4px}
+      .n-modalbtns{display:grid;gap:8px;margin:0 0 12px}
+      .n-modalbtns a{display:block;text-align:center;padding:12px;border-radius:10px;background:linear-gradient(90deg,var(--n-purple),var(--n-coral));color:var(--n-bg);font-weight:700;text-decoration:none}
+      @media (max-width:760px){
+        .n-topwrap{padding:10px 16px;gap:8px}
+        .n-tabs,.n-beta,.n-disc{display:none !important}
+        .n-bottomnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;background:color-mix(in srgb,var(--n-bg) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid color-mix(in srgb,var(--n-white-ov) 8%,transparent);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+        .n-bottomnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:var(--n-dim2);text-decoration:none;font-size:12px;font-weight:600}
+        .n-bottomnav a.on{color:var(--n-cyan)}
+        .n-app{padding-bottom:72px}
+        .n-sec{padding-left:16px !important;padding-right:16px !important}
+        .n-walletbtn{padding:8px 12px !important;font-size:13px !important}
+        .n-addr{padding:7px 10px !important;font-size:12px !important}
+        .n-rpc{padding:6px 9px !important}
+        .n-menu{position:fixed;top:58px;left:12px;right:12px;width:auto}
+        .n-app .nodal-panel{padding:18px 16px 16px !important}
+      }
+      @media (max-width:360px){ .n-walletbtn svg{display:none} }
       @keyframes nodal-spin { to { transform: rotate(360deg); } }
       @keyframes panel-rise {
         from { opacity: 0; transform: translateY(16px); }
@@ -505,44 +770,22 @@ function GlobalStyle() {
 }
 
 function BetaBanner() {
-  const [open, setOpen] = useState(false);
   return (
-    <div style={{ position: "relative", maxWidth: 960, margin: "0 auto", padding: "0 24px 8px" }}>
-      <div style={{ border: "1px solid color-mix(in srgb, var(--n-coral) 33%, transparent)", background: "color-mix(in srgb, var(--n-warmdeep) 40%, transparent)", borderRadius: 12, padding: "16px 18px" }}>
-        <span
-          style={{
-            display: "inline-block",
-            fontFamily: "'Space Mono', monospace",
-            fontSize: 11,
-            letterSpacing: "0.08em",
-            fontWeight: 700,
-            color: "var(--n-coral)",
-            border: "1px solid color-mix(in srgb, var(--n-coral) 33%, transparent)",
-            borderRadius: 6,
-            padding: "3px 8px",
-            marginBottom: 10,
-          }}
-        >
+    <div id="risks" className="n-sec" style={{ position: "relative", maxWidth: 960, margin: "0 auto", padding: "20px 24px 4px", scrollMarginTop: 80 }}>
+      <div style={{ border: "1px solid color-mix(in srgb, var(--n-coral) 33%, transparent)", background: "color-mix(in srgb, var(--n-warmdeep) 40%, transparent)", borderRadius: 14, padding: "16px 18px" }}>
+        <span style={{ display: "inline-block", fontFamily: "'Space Mono', monospace", fontSize: 11, letterSpacing: "0.08em", fontWeight: 700, color: "var(--n-coral)", border: "1px solid color-mix(in srgb, var(--n-coral) 33%, transparent)", borderRadius: 6, padding: "3px 8px", marginBottom: 10 }}>
           BETA
         </span>
         <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "var(--n-warm)" }}>
           Experimental software on an early-stage chain. Source is published but not
           independently audited — start with small amounts.
         </p>
-        <button
-          onClick={() => setOpen(!open)}
-          style={{ background: "none", border: "none", padding: 0, marginTop: 8, color: "var(--n-cyan)", fontSize: 13, cursor: "pointer", textDecoration: "underline", fontFamily: "'Instrument Sans', sans-serif" }}
-        >
-          {open ? "Show less" : "Read more"}
-        </button>
-        {open && (
-          <ul style={{ margin: "10px 0 0", padding: "0 0 0 18px", fontSize: 13, lineHeight: 1.6, color: "var(--n-warm)" }}>
-            <li>One live liquidity source today (Reef, built by the same team as Nodal). Each trade has a beta limit, shown in Route details before you swap.</li>
-            <li>AI-assisted security review completed 2 Oct 2026 (<a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "var(--n-cyan)" }}>read it</a>), but no independent audit yet.</li>
-            <li>Admin controls (pause, fees, sources, caps) are held by a 2-of-3 hardware-wallet multisig, not a single key.</li>
-            <li>The Bridge tab previews a lock-and-mint flow — no official BlockDAG bridge exists yet.</li>
-          </ul>
-        )}
+        <ul style={{ margin: "10px 0 0", padding: "0 0 0 18px", fontSize: 13, lineHeight: 1.6, color: "var(--n-warm)" }}>
+          <li>One live liquidity source today (Reef, built by the same team as Nodal). Each trade has a beta limit, shown in Route details before you swap.</li>
+          <li>AI-assisted security review completed 2 Oct 2026 (<a href="https://benjiprojects1404-services.pages.dev/security-review/" target="_blank" rel="noopener" style={{ color: "var(--n-cyan)" }}>read it</a>), but no independent audit yet.</li>
+          <li>Admin controls (pause, fees, sources, caps) are held by a 2-of-3 hardware-wallet multisig, not a single key.</li>
+          <li>The Bridge tab previews a lock-and-mint flow — no official BlockDAG bridge exists yet.</li>
+        </ul>
       </div>
     </div>
   );
@@ -550,7 +793,7 @@ function BetaBanner() {
 
 function Section({ id, children, style }) {
   return (
-    <section id={id} style={{ maxWidth: 960, margin: "0 auto", padding: "28px 24px", ...style }}>
+    <section id={id} className="n-sec" style={{ maxWidth: 960, margin: "0 auto", padding: "20px 24px", scrollMarginTop: 80, ...style }}>
       {children}
     </section>
   );
@@ -565,7 +808,7 @@ function Eyebrow({ children, color = "var(--n-cyan)" }) {
 }
 
 function WalletButton() {
-  const { address, connecting, connect, disconnect, error, isWrongChain, switchToBlockDAG } = useWallet();
+  const { address, connecting, connect, disconnect, isWrongChain, switchToBlockDAG } = useWallet();
   const [copied, setCopied] = useState(false);
 
   if (address) {
@@ -586,6 +829,7 @@ function WalletButton() {
             setTimeout(() => setCopied(false), 1500);
           }}
           title="Copy address"
+          className="n-addr"
           style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: "'Space Mono', monospace", fontSize: 13, color: "var(--n-ink)", background: "var(--n-raised)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 10%, transparent)", borderRadius: 999, padding: "7px 12px", cursor: "pointer" }}
         >
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: isWrongChain ? "var(--n-coral)" : "var(--n-cyan)" }} />
@@ -595,6 +839,7 @@ function WalletButton() {
         <button
           onClick={disconnect}
           title="Disconnect"
+          className="n-disc"
           style={{ fontSize: 12, color: "var(--n-dim2)", background: "transparent", border: "none", cursor: "pointer" }}
         >
           Disconnect
@@ -606,6 +851,7 @@ function WalletButton() {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
       <button
+        className="n-walletbtn"
         onClick={connect}
         disabled={connecting}
         style={{
@@ -628,34 +874,6 @@ function WalletButton() {
         <Wallet size={15} color="var(--n-cyan)" />
         {connecting ? "Connecting…" : "Connect wallet"}
       </button>
-      {error && <span style={{ fontSize: 11, color: "var(--n-coral)", maxWidth: 220, textAlign: "right" }}>{error}</span>}
-    </div>
-  );
-}
-
-function NavBar() {
-  const links = [
-    { href: "#how", label: "How it works" },
-    { href: "#sources", label: "Sources" },
-    { href: "#faq", label: "FAQ" },
-  ];
-  return (
-    <div className="nodal-scope" style={{ position: "sticky", top: 0, zIndex: 20, background: "color-mix(in srgb, var(--n-bg) 80%, transparent)", backdropFilter: "blur(10px)", borderBottom: "1px solid color-mix(in srgb, var(--n-white-ov) 6%, transparent)" }}>
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Logo size={26} />
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", justifyContent: "flex-end" }}>
-          {links.map((l) => (
-            <a key={l.href} href={l.href} style={{ fontSize: 14, color: "var(--n-muted)", textDecoration: "none", display: "none" }} className="nav-link">
-              {l.label}
-            </a>
-          ))}
-          <RpcBadge />
-          <WalletButton />
-        </div>
-      </div>
-      <style>{`@media (min-width: 640px) { .nav-link { display: inline !important; } }`}</style>
     </div>
   );
 }
@@ -663,15 +881,15 @@ function NavBar() {
 function Hero() {
   return (
     <div className="nodal-scope" style={{ position: "relative", overflow: "hidden" }}>
-      <Section style={{ position: "relative", padding: "48px 24px 24px", textAlign: "center" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "'Space Mono', monospace", fontSize: 12, color: "var(--n-cyan)", border: "1px solid color-mix(in srgb, var(--n-cyan) 33%, transparent)", borderRadius: 999, padding: "5px 14px", background: "color-mix(in srgb, var(--n-cyan) 6%, transparent)", marginBottom: 22 }}>
+      <Section style={{ position: "relative", padding: "28px 24px 16px", textAlign: "center" }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "'Space Mono', monospace", fontSize: 12, color: "var(--n-cyan)", border: "1px solid color-mix(in srgb, var(--n-cyan) 33%, transparent)", borderRadius: 999, padding: "5px 14px", background: "color-mix(in srgb, var(--n-cyan) 6%, transparent)", marginBottom: 16 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--n-cyan)" }} />
           on chain 1404
         </div>
-        <h1 style={{ margin: "0 0 18px", fontSize: "clamp(32px, 5vw, 52px)", lineHeight: 1.12, fontWeight: 700, maxWidth: 720, marginInline: "auto" }}>
+        <h1 style={{ margin: "0 0 12px", fontSize: "clamp(26px, 4vw, 34px)", lineHeight: 1.15, fontWeight: 700, maxWidth: 720, marginInline: "auto" }}>
           The routing layer for <span style={{ color: "var(--n-cyan)" }}>BlockDAG</span> DeFi.
         </h1>
-        <p style={{ margin: "0 auto", fontSize: 17, lineHeight: 1.55, color: "var(--n-muted)", maxWidth: 800 }}>
+        <p style={{ margin: "0 auto", fontSize: 15, lineHeight: 1.55, color: "var(--n-muted)", maxWidth: 680 }}>
           Nodal quotes every liquidity source registered on chain 1404 and routes each trade to whichever one returns the most. Once a bridge goes live, it will let you bring in the top assets in crypto too — non-custodial, transparent, built for this chain.
         </p>
       </Section>
@@ -699,8 +917,8 @@ function StatsBar() {
     { label: "Keys per admin action", value: "2 of 3" },
   ];
   return (
-    <div className="nodal-scope" style={{ borderTop: "1px solid color-mix(in srgb, var(--n-white-ov) 6%, transparent)", borderBottom: "1px solid color-mix(in srgb, var(--n-white-ov) 6%, transparent)" }}>
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "16px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, textAlign: "center" }}>
+    <div className="nodal-scope n-sec" style={{ maxWidth: 960, margin: "0 auto", padding: "4px 24px" }}>
+      <div style={{ border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 14, background: "var(--n-surface)", padding: "16px 12px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, textAlign: "center" }}>
         {stats.map((s) => (
           <div key={s.label}>
             <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 22, fontWeight: 700, color: "var(--n-ink)" }}>
@@ -719,11 +937,11 @@ function HowItWorks() {
     <Section id="how" className="nodal-scope">
       <div className="nodal-scope">
         <Eyebrow>How it works</Eyebrow>
-        <h2 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 700 }}>From one input to the best route.</h2>
-        <p style={{ margin: "0 0 28px", fontSize: 15, color: "var(--n-muted)", maxWidth: 760 }}>
+        <h2 style={{ margin: "0 0 14px", fontSize: 22, fontWeight: 700 }}>From one input to the best route.</h2>
+        <p style={{ margin: "0 0 20px", fontSize: 15, color: "var(--n-muted)", maxWidth: 760 }}>
           Four steps happen between you entering an amount and a transaction landing on-chain — all of it visible, none of it hidden in a black box.
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
           {STEPS.map((s) => (
             <div key={s.n} style={{ border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 14, background: "var(--n-surface)", padding: "20px 20px" }}>
               <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: "var(--n-cyan)", marginBottom: 10 }}>{s.n}</div>
@@ -741,11 +959,11 @@ function Features() {
   return (
     <Section>
       <Eyebrow color="var(--n-purple)">Why Nodal</Eyebrow>
-      <h2 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 700 }}>Built to be trusted with a trade.</h2>
-      <p style={{ margin: "0 0 40px", fontSize: 15, color: "var(--n-muted)", maxWidth: 560 }}>
+      <h2 style={{ margin: "0 0 14px", fontSize: 22, fontWeight: 700 }}>Built to be trusted with a trade.</h2>
+      <p style={{ margin: "0 0 20px", fontSize: 15, color: "var(--n-muted)", maxWidth: 560 }}>
         Every design decision here optimizes for one thing: you keeping more of your own trade.
       </p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
         {FEATURES.map((f) => (
           <div key={f.title} style={{ border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 14, background: "var(--n-surface)", padding: "20px 20px" }}>
             <div style={{ width: 38, height: 38, borderRadius: 10, background: `color-mix(in srgb, ${f.color} 10%, transparent)`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
@@ -764,7 +982,7 @@ function Sources() {
   return (
     <Section id="sources">
       <Eyebrow color="var(--n-coral)">Liquidity sources</Eyebrow>
-      <h2 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 700 }}>What Nodal routes across today.</h2>
+      <h2 style={{ margin: "0 0 14px", fontSize: 22, fontWeight: 700 }}>What Nodal routes across today.</h2>
       <p style={{ margin: "0 0 24px", fontSize: 15, color: "var(--n-muted)", maxWidth: 560 }}>
         Every source below is registered on-chain with NodalRouter and quoted live. New DEXs are
         added with a single transaction once they have real liquidity — no redeploy.
@@ -817,7 +1035,7 @@ function FAQ() {
   return (
     <Section id="faq">
       <Eyebrow>FAQ</Eyebrow>
-      <h2 style={{ margin: "0 0 32px", fontSize: 30, fontWeight: 700 }}>Straight answers.</h2>
+      <h2 style={{ margin: "0 0 16px", fontSize: 22, fontWeight: 700 }}>Straight answers.</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {FAQS.map((item, i) => {
           const open = openIndex === i;
@@ -1076,11 +1294,13 @@ function RpcBadge() {
       type="button"
       title={title}
       aria-haspopup="dialog"
+      aria-label={"RPC status: " + title}
+      className="n-rpc"
       onClick={() => window.dispatchEvent(new Event("nodal-open-rpc"))}
       style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "'Instrument Sans', sans-serif", fontSize: 12, color: "var(--n-muted)", padding: "6px 11px", borderRadius: 999, border: "1px solid color-mix(in srgb, var(--n-white-ov) 12%, transparent)", background: "transparent", cursor: "pointer", whiteSpace: "nowrap" }}
     >
       <span style={{ width: 8, height: 8, borderRadius: "50%", background: dot, boxShadow: st.state === "up" ? "0 0 6px var(--n-dot-ok)" : "none" }} />
-      RPC status
+      RPC
     </button>
   );
 }
@@ -1088,7 +1308,7 @@ function RpcBadge() {
 function Footer() {
   return (
     <div className="nodal-scope" style={{ borderTop: "1px solid color-mix(in srgb, var(--n-white-ov) 6%, transparent)" }}>
-      <Section style={{ padding: "40px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+      <Section style={{ padding: "24px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Logo size={22} />
         </div>
@@ -1101,45 +1321,6 @@ function Footer() {
 
 /* ---------------- Product: tabs, swap, bridge ---------------- */
 
-
-function ProductSection() {
-  const wallet = useWallet();
-  const [tab, setTab] = useState("swap");
-  return (
-    <Section id="app">
-      <Eyebrow>Try it</Eyebrow>
-      <h2 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 700 }}>Swap on BlockDAG, live.</h2>
-      <p style={{ margin: "0 0 28px", fontSize: 15, color: "var(--n-muted)", maxWidth: 560 }}>
-        Quotes come straight from NodalRouter on chain 1404 and trades execute on-chain. Beta limits apply per trade. The Bridge tab is still a preview only, since no BlockDAG bridge exists yet.
-      </p>
-
-      <div className="nodal-scope" style={{ display: "flex", gap: 6, marginBottom: 18, background: "var(--n-surface0)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 12, padding: 5, maxWidth: 480, boxSizing: "border-box" }}>
-        {[{ id: "swap", label: "Swap" }, { id: "bridge", label: "Bridge" }].map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            style={{
-              flex: 1,
-              padding: "9px 0",
-              borderRadius: 8,
-              border: "none",
-              cursor: "pointer",
-              fontFamily: "'Instrument Sans', sans-serif",
-              fontWeight: 700,
-              fontSize: 14,
-              background: tab === t.id ? "linear-gradient(90deg, var(--n-purple), var(--n-coral))" : "transparent",
-              color: tab === t.id ? "var(--n-bg)" : "var(--n-muted)",
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {tab === "swap" ? <LiveSwap wallet={wallet} /> : <BridgeTool />}
-    </Section>
-  );
-}
 
 function BridgeTool() {
   const { address, connect } = useWallet();

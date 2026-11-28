@@ -119,7 +119,7 @@ export default function Ticker() {
 }
 
 export const tickerCss = `
-.n-tk{max-width:960px;margin:18px auto 6px;padding:0 24px;position:relative;z-index:1}
+.n-tk{max-width:960px;margin:16px auto 0;padding:0 24px;position:relative;z-index:1}
 .n-tk-box{background:var(--n-surface);border:1px solid var(--n-line-strong);border-radius:18px;padding:12px 0 12px 16px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:14px;position:relative;overflow:hidden}
 .n-tk-box::before{content:"";position:absolute;inset:0;background:radial-gradient(circle,var(--n-line-strong) 1px,transparent 1.2px) 0 0/14px 14px;opacity:.5;pointer-events:none}
 .n-tk-lead{position:relative;display:flex;flex-direction:column;gap:2px;min-width:0}
