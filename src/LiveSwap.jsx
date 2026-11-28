@@ -807,7 +807,7 @@ export default function LiveSwap({ wallet }) {
           border: "none",
           background: mainDisabled ? "var(--n-line-strong)" : danger ? "linear-gradient(90deg, var(--n-red), var(--n-coral))" : "linear-gradient(90deg, var(--n-purple), var(--n-coral))",
           color: mainDisabled ? "var(--n-muted)" : "var(--n-bg)",
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'Instrument Sans', sans-serif",
           fontWeight: 700,
           fontSize: 15.5,
           cursor: mainDisabled ? "default" : "pointer",
@@ -968,7 +968,7 @@ function TokenFacts({ fromToken, toToken, card, h, note }) {
 
 function RouteDetails({ quote, quoting, fromToken, toToken, tokens, feeBps, capNow, recent }) {
   const card = { background: "var(--n-surface)", border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 16, padding: "20px 22px" };
-  const h = { margin: "0 0 10px", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: 0.4, color: "var(--n-muted)", textTransform: "uppercase" };
+  const h = { margin: "0 0 10px", fontFamily: "'Instrument Sans', sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: 0.4, color: "var(--n-muted)", textTransform: "uppercase" };
   const note = { margin: "8px 0 0", fontSize: 12, lineHeight: 1.55, color: "var(--n-dim2)" };
   const sym = (a) => {
     if (lc(a) === lc(CFG.wbdag)) return "BDAG";
