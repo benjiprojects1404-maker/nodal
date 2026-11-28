@@ -3,6 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <script>
+      // Light / dark: the saved choice, otherwise the device setting. Set before the page draws so there is no flash.
+      (function () { var t = null; try { t = localStorage.getItem("theme"); } catch (e) {}
+        if (t !== "light" && t !== "dark") t = window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.dataset.theme = t; })();
+    </script>
+    <script>
       // Old hosting address -> own domain (keeps the same path). Only fires on the exact old host,
       // so the real domain and preview deployments are unaffected.
       if (location.hostname === "nodal-gamma-seven.vercel.app") location.replace("https://www.nodaldex.fyi" + location.pathname + location.search + location.hash);
@@ -22,7 +28,7 @@
     <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://www.nodaldex.fyi/og-image.png?v=2" />
-    <style>html, body { background: #0A0E17; margin: 0; }</style>
+    <style>html, body { background: #0A0E17; margin: 0; } html[data-theme="light"], html[data-theme="light"] body { background: #e6f4f6; }</style>
   </head>
   <body>
     <div id="root"></div>

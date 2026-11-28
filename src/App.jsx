@@ -20,6 +20,8 @@ import {
   Copy,
   Info,
   X as XIcon,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 /* ---------------- App views (hash routed, like reefdex.fyi) ----------------
@@ -598,6 +600,7 @@ function AppHeader({ view }) {
         </nav>
         <div className="n-spacer" />
         <RpcBadge />
+        <ThemeButton />
         <WalletButton />
       </div>
     </header>
@@ -706,6 +709,8 @@ function GlobalStyle() {
       /* App layout (Nov 2026): header with logo menu + tabs, one view at a time, bottom nav on phones. */
       .n-top{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--n-bg) 82%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid color-mix(in srgb,var(--n-white-ov) 6%,transparent)}
       .n-topwrap{max-width:960px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:12px}
+      .n-theme{flex:none;width:34px;height:34px;display:grid;place-items:center;border-radius:999px;border:1px solid var(--n-line-strong);background:transparent;color:var(--n-muted);cursor:pointer;padding:0}
+      .n-theme:hover{color:var(--n-ink);border-color:var(--n-border2)}
       .n-brand{position:relative;flex:none}
       .n-brandbtn{display:flex;align-items:center;gap:4px;background:none;border:0;padding:4px 6px 4px 0;cursor:pointer;color:var(--n-ink)}
       .n-chev{color:var(--n-muted);transition:transform .2s}
@@ -755,6 +760,7 @@ function GlobalStyle() {
         .n-walletbtn{padding:8px 12px !important;font-size:13px !important}
         .n-addr{padding:7px 10px !important;font-size:12px !important}
         .n-rpc{padding:6px 9px !important}
+        .n-theme{width:32px;height:32px}
         .n-menu{position:fixed;top:58px;left:12px;right:12px;width:auto}
         .n-app .nodal-panel{padding:18px 16px 16px !important}
       }
@@ -1283,6 +1289,33 @@ function RpcStatusPanel() {
       </div>
     </div>
     </div>
+  );
+}
+
+// Light / dark switch (28 Nov 2026). index.html applies the saved choice (or the device setting) before React starts.
+function ThemeButton() {
+  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme || "dark");
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: light)");
+    const follow = () => {
+      let saved = null;
+      try { saved = localStorage.getItem("theme"); } catch (e) {}
+      if (saved !== "light" && saved !== "dark") { const t = mq.matches ? "light" : "dark"; document.documentElement.dataset.theme = t; setTheme(t); }
+    };
+    if (mq.addEventListener) mq.addEventListener("change", follow);
+    return () => { if (mq.removeEventListener) mq.removeEventListener("change", follow); };
+  }, []);
+  const light = theme === "light";
+  const flip = () => {
+    const next = light ? "dark" : "light";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("theme", next); } catch (e) {}
+    setTheme(next);
+  };
+  return (
+    <button type="button" className="n-theme" onClick={flip} title={light ? "Dark mode" : "Light mode"} aria-label={light ? "Switch to dark mode" : "Switch to light mode"}>
+      {light ? <Moon size={16} strokeWidth={2} /> : <Sun size={16} strokeWidth={2} />}
+    </button>
   );
 }
 
