@@ -727,6 +727,12 @@ function GlobalStyle() {
       .n-spacer{flex:1}
       .n-views{position:relative;z-index:1;min-height:60vh;padding-bottom:12px}
       .n-sechead{margin:0 0 16px}
+
+      /* One type scale on every tab (28 Nov 2026): page title 26px, section headings 22px, card titles 16px, all in the brand font. */
+      .n-views h1, .n-views h2 { font-family: 'Bricolage Grotesque','Instrument Sans',sans-serif !important; font-weight: 800 !important; letter-spacing: -0.01em; }
+      .n-views h2 { font-size: 22px !important; }
+      .n-views li { font-size: 14px !important; }
+      .n-sechead h2 { margin: 0 0 6px; }
       .n-sechead h2{margin:0 0 6px;font-size:22px}
       .n-sechead p{margin:0;font-size:15px;line-height:1.55;color:var(--n-muted);max-width:620px}
       .n-bottomnav{display:none}
@@ -881,15 +887,15 @@ function WalletButton() {
 function Hero() {
   return (
     <div className="nodal-scope" style={{ position: "relative", overflow: "hidden" }}>
-      <Section style={{ position: "relative", padding: "28px 24px 16px", textAlign: "center" }}>
+      <Section style={{ position: "relative", padding: "20px 24px 12px", boxSizing: "content-box" }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "'Space Mono', monospace", fontSize: 12, color: "var(--n-cyan)", border: "1px solid color-mix(in srgb, var(--n-cyan) 33%, transparent)", borderRadius: 999, padding: "5px 14px", background: "color-mix(in srgb, var(--n-cyan) 6%, transparent)", marginBottom: 16 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--n-cyan)" }} />
           on chain 1404
         </div>
-        <h1 style={{ margin: "0 0 12px", fontSize: "clamp(26px, 4vw, 34px)", lineHeight: 1.15, fontWeight: 700, maxWidth: 720, marginInline: "auto" }}>
+        <h1 style={{ margin: "0 0 10px", fontSize: 26, lineHeight: 1.2, fontWeight: 800, maxWidth: 720 }}>
           The routing layer for <span style={{ color: "var(--n-cyan)" }}>BlockDAG</span> DeFi.
         </h1>
-        <p style={{ margin: "0 auto", fontSize: 15, lineHeight: 1.55, color: "var(--n-muted)", maxWidth: 680 }}>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.55, color: "var(--n-muted)", maxWidth: 680 }}>
           Nodal quotes every liquidity source registered on chain 1404 and routes each trade to whichever one returns the most. Once a bridge goes live, it will let you bring in the top assets in crypto too — non-custodial, transparent, built for this chain.
         </p>
       </Section>
@@ -945,7 +951,7 @@ function HowItWorks() {
           {STEPS.map((s) => (
             <div key={s.n} style={{ border: "1px solid color-mix(in srgb, var(--n-white-ov) 8%, transparent)", borderRadius: 14, background: "var(--n-surface)", padding: "20px 20px" }}>
               <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: "var(--n-cyan)", marginBottom: 10 }}>{s.n}</div>
-              <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700 }}>{s.title}</h3>
+              <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 700 }}>{s.title}</h3>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "var(--n-muted)" }}>{s.body}</p>
             </div>
           ))}
@@ -995,7 +1001,7 @@ function Sources() {
             style={{ border: "1px solid color-mix(in srgb, var(--n-cyan) 20%, transparent)", borderRadius: 12, background: "var(--n-surface)", padding: "20px 22px" }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 17, fontWeight: 700, color: "var(--n-ink)" }}>{src.name}</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: "var(--n-ink)" }}>{src.name}</span>
               <span style={{ fontSize: 11, fontFamily: "'Space Mono', monospace", color: "var(--n-cyan)", border: "1px solid color-mix(in srgb, var(--n-cyan) 33%, transparent)", borderRadius: 999, padding: "2px 9px" }}>
                 LIVE
               </span>
